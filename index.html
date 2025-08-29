@@ -180,76 +180,63 @@
         <div class="hint">Regénère 40 personnes (mock), planning S1..S10 et placement aléatoire.</div>
       </div>
 
-
-<div class="control-group">
-        <details id="addRoomPanel" class="collapsible">
+      <!-- Gestion des lits -->
+      <div class="control-group">
+        <details id="bedsActionsPanel" class="collapsible">
           <summary>🛏️ Gestion des Lits <span class="hint">Masquer / Afficher</span></summary>
           <div class="content">
-      <div class="control-group">
-        <label>Semaine sélectionnée</label>
-        <select id="selectWeek"></select>
+            <div class="control-group">
+              <label>Semaine sélectionnée</label>
+              <select id="selectWeek"></select>
+            </div>
+
+            <div class="control-group" style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn warn" id="btnClearNonResidents">Vider les lits (sauf résidents)</button>
+              <button class="btn primary" id="btnRandomAssign">Remplir au hasard</button>
+              <button class="btn warn" id="btnClearResidents">Vider les lits des résidents</button>
+            </div>
+          </div>
+        </details>
       </div>
-
-      <div class="control-group" style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn warn" id="btnClearNonResidents">Vider les lits (sauf résidents)</button>
-        <button class="btn primary" id="btnRandomAssign">Remplir au hasard</button>
-        <button class="btn warn" id="btnClearResidents">Vider les lits des résidents</button>
-        
-      </div>
-
-      
-
-  </div>
-  </details>
-</div>
-
-
-
-
 
       <!-- Affichage + filtres -->
-      
-      
-      
-<div class="control-group">
-        <details id="addRoomPanel" class="collapsible">
+      <div class="control-group">
+        <details id="displayPanel" class="collapsible">
           <summary> 🔎 Gestion de l'affichage <span class="hint">Masquer / Afficher</span></summary>
           <div class="content">      
-      
-      <div class="control-group">
-        <label>Affichage</label>
-        <div class="row">
-          <label class="hint"><input type="checkbox" id="toggleCompact"> Compact</label>
-        </div>
-        <div class="row">
-          <label class="hint"><input type="checkbox" id="toggleOnlyFree"> Lits libres</label>
-          <label class="hint"><input type="checkbox" id="toggleOnlyViolations"> Uniquement en alerte</label>
-        </div>
-      </div>
+            <div class="control-group">
+              <label>Affichage</label>
+              <div class="row">
+                <label class="hint"><input type="checkbox" id="toggleCompact"> Compact</label>
+              </div>
+              <div class="row">
+                <label class="hint"><input type="checkbox" id="toggleOnlyFree"> Lits libres</label>
+                <label class="hint"><input type="checkbox" id="toggleOnlyViolations"> Uniquement en alerte</label>
+              </div>
+            </div>
 
-      <div class="control-group">
-        <label>Filtrer par étage (multi)</label>
-        <select id="filterFloorsMulti" multiple size="5" style="width:100%"></select>
-        <div class="row">
-          <button class="btn" id="btnFloorsAll">Tous</button>
-          <button class="btn" id="btnFloorsNone">Aucun</button>
-        </div>
-        <div class="hint">Sélection multiple: Ctrl/Cmd+clic</div>
-      </div>
+            <div class="control-group">
+              <label>Filtrer par étage (multi)</label>
+              <select id="filterFloorsMulti" multiple size="5" style="width:100%"></select>
+              <div class="row">
+                <button class="btn" id="btnFloorsAll">Tous</button>
+                <button class="btn" id="btnFloorsNone">Aucun</button>
+              </div>
+              <div class="hint">Sélection multiple: Ctrl/Cmd+clic</div>
+            </div>
 
-      <div class="control-group">
-        <label>Étage(s) dédié(s) aux filles</label>
-        <select id="selectGirlsFloors" multiple size="4"></select>
-      </div>
+            <div class="control-group">
+              <label>Étage(s) dédié(s) aux filles</label>
+              <select id="selectGirlsFloors" multiple size="4"></select>
+            </div>
 
-      <div class="control-group">
-        <label>Taille d'un groupe hôtel</label>
-        <input id="hotelGroupSize" type="number" min="2" max="6" value="3">
+            <div class="control-group">
+              <label>Taille d'un groupe hôtel</label>
+              <input id="hotelGroupSize" type="number" min="2" max="6" value="3">
+            </div>
+          </div>
+        </details>
       </div>
-    </div>
-  </details>
-</div>
-      
 
       <hr style="border:none;height:1px;background:rgba(255,255,255,.12);margin:8px 0">
 
@@ -321,29 +308,81 @@
     <main class="panel"><div id="floors" class="floors"></div></main>
 
     <aside class="panel">
-  <h3>À l'hôtel <span id="hotelOverflowBadge" class="badge-pill">0</span></h3>
-  <div id="hotelList" class="floors"></div>
-</aside>
+      <h3>À l'hôtel <span id="hotelOverflowBadge" class="badge-pill">0</span></h3>
+      <div id="hotelList" class="floors"></div>
+    </aside>
 
   </section>
 </div>
 
 <script>
+// --- URLs distantes (RAW GitHub) ---
+const REMOTE_URLS = {
+  planning:   "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/planning_2025_2026.json",
+  apprentices:"https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/apprentis.json",
+  residents:  "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/resident.json",
+};
+
+// fetch JSON robuste
+async function fetchJSON(url){
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error(`HTTP ${res.status} @ ${url}`);
+  return await res.json();
+}
+
+// Boot distant : charge planning + apprentis + résidents depuis GitHub
+async function bootWithRemote(){
+  try{
+    const [planning, appr, resi] = await Promise.all([
+      fetchJSON(REMOTE_URLS.planning),
+      fetchJSON(REMOTE_URLS.apprentices),
+      fetchJSON(REMOTE_URLS.residents),
+    ]);
+
+    // 1) Planning
+    importPlanningJSON(planning);
+
+    // 2) Apprentis formation
+    importFormationJSON(appr);
+
+    // 3) Résidents annuels
+    importResidentsJSON(resi);
+
+    // Rendu + placement
+    renderAll();
+    randomAssign();
+
+    console.log("[REMOTE] Planning + Apprentis + Résidents chargés depuis GitHub.");
+  }catch(err){
+    console.error("[REMOTE] Échec du chargement distant:", err);
+
+    // Fallback sûr (mock data)
+    generateMockPeople();
+    generateMockPlanning();
+    renderAll();
+    randomAssign();
+
+    alert("Impossible de charger les données en ligne. Passage en mode démo (mock).");
+  }
+
+}
+
+
 (function(){
 
   function computeHotelOverflowCount(){
-  const present = peoplePresentForWeek(state.selectedWeek);          // seulement ceux "présents" cette semaine
-  const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
-  // Apprentis = non-résidents (ou simplement pas resident_annuel), non placés
-  const traineesOverflow = present.filter(p => !p.resident_annuel && !idsInBeds.has(p.id));
-  return traineesOverflow.length;
-}
+    const present = peoplePresentForWeek(state.selectedWeek);          // seulement ceux "présents" cette semaine
+    const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+    // Apprentis = non-résidents (ou simplement pas resident_annuel), non placés
+    const traineesOverflow = present.filter(p => !p.resident_annuel && !idsInBeds.has(p.id));
+    return traineesOverflow.length;
+  }
 
-function renderHotelOverflowBadge(){
-  const el = document.getElementById('hotelOverflowBadge');
-  if(!el) return;
-  el.textContent = computeHotelOverflowCount();
-}
+  function renderHotelOverflowBadge(){
+    const el = document.getElementById('hotelOverflowBadge');
+    if(!el) return;
+    el.textContent = computeHotelOverflowCount();
+  }
 
   // =========================
   // 0) Infrastructure & State
@@ -1042,18 +1081,17 @@ function renderHotelOverflowBadge(){
     });
 
     document.getElementById('btnClearResidents').addEventListener('click', ()=>{
-  for(const f of state.building.floors){
-    for(const r of f.rooms){
-      for(const b of r.beds){
-        if(!b.personId) continue;
-        const p = findPersonById(b.personId);
-        if(p && p.resident_annuel) b.personId=null;
+      for(const f of state.building.floors){
+        for(const r of f.rooms){
+          for(const b of r.beds){
+            if(!b.personId) continue;
+            const p = findPersonById(b.personId);
+            if(p && p.resident_annuel) b.personId=null;
+          }
+        }
       }
-    }
-  }
-  renderAll();
-});
-
+      renderAll();
+    });
 
     document.getElementById('btnRandomAssign').addEventListener('click', randomAssign);
 
@@ -1135,11 +1173,8 @@ function renderHotelOverflowBadge(){
   // 12) Auto-start
   // ======================
   bootstrapRooms();
-  generateMockPeople();
-  generateMockPlanning();
   bind();
-  renderAll();
-  randomAssign(); // placement initial
+  bootWithRemote();
 
   // Expose debug si besoin
   window._state = state;

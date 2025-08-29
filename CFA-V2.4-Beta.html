@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFA · Gestion des chambres — v4 Compact + Filtres + Secure Add</title>
+<style>
+  :root{
+    --bg:#0f172a;--panel:#111827;--muted:#94a3b8;--text:#e5e7eb;--primary:#22d3ee;
+    --danger:#ef4444;--girl:#a78bfa;--minor:#f472b6;--badge:#38bdf8;--shadow:0 10px 30px rgba(0,0,0,.25);--r:18px
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b1220,var(--bg));color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+  .container{max-width:1600px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0 22px}
+  .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:var(--shadow)}
+  .layout{display:grid;grid-template-columns:360px 1fr 360px;gap:20px}
+  .panel{background:radial-gradient(1200px 600px at -10% -10%,rgba(255,255,255,.06),transparent 40%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+  .dashboard{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:6px 0 18px}
+  .tile{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px}
+  .tile h3{margin:0 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .tile .big{font-weight:700;font-size:28px;margin:4px 0 8px}
+  .progress{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .bar{height:100%;background:linear-gradient(90deg,var(--primary),#8b5cf6)}
+  .controls .btn{display:inline-flex;align-items:center;gap:8px;background:#0b1220;border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:12px;padding:10px 12px;font-size:14px;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(139,92,246,.14));border-color:rgba(34,211,238,.35)}
+  .btn.warn{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(239,68,68,.12));border-color:rgba(245,158,11,.35)}
+  .control-group{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:#0b1220;border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:12px;padding:10px 12px;font-size:14px}
+  .hint{font-size:12px;color:var(--muted)}
+  .floors{display:flex;flex-direction:column;gap:16px}
+  .floor{padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.03)}
+  .rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;grid-auto-flow:dense}
+  .room{padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(12,17,29,.7); min-width:0}
+  .room[data-capacity="5"]{grid-column:span 2}
+  @media (max-width:900px){ .room[data-capacity="5"]{grid-column:span 1} }
+  .room.violation{border-color:var(--danger);box-shadow:0 0 0 2px rgba(239,68,68,.35) inset}
+  .room.full {background: rgba(34,211,238,.08); border-color: rgba(34,211,238,.3);}
+  .beds{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .bed{min-height: var(--bed-min, 54px);border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}
+  .bed-label{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+  .chip{display:flex;flex-direction:column;gap:2px;border-radius:10px;padding:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:grab}
+  .chip .name{font-size:13px;font-weight:700}
+  .chip .meta{font-size:11px;color:var(--muted)}
+  .chip.female{box-shadow:0 0 0 2px var(--girl) inset}
+  .chip.minor{box-shadow:0 0 0 2px var(--minor) inset}
+  .badge{font-size:10px;color:var(--badge)}
+  .empty{opacity:.5}
+  .error-banner{position:sticky;top:0;z-index:999;background:#220;color:#fff;border:1px solid #a00;padding:10px;border-radius:12px;margin-bottom:12px;display:none}
+
+  /* Capacité inline */
+  .cap-editor{display:flex;align-items:center;gap:6px}
+  .cap-input{width:64px;text-align:center}
+  .cap-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);border-radius:10px;padding:6px 8px;cursor:pointer}
+  .cap-btn:disabled, .cap-input:disabled{opacity:.4;cursor:not-allowed}
+
+  /* Carte hôtel (en attente) */
+  .room.hotel-card{background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.25);display:flex;flex-direction:column;gap:6px}
+  .room.hotel-card .title{font-weight:600;font-size:13px;opacity:.8;margin-bottom:4px}
+
+  /* --- Menu repliables --- */
+  .collapsible {
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    background: rgba(255,255,255,.04);
+    overflow: hidden;
+  }
+  .collapsible > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between;
+    user-select: none;
+  }
+  .collapsible > summary::-webkit-details-marker { display: none; }
+  .collapsible > summary::after {
+    content: "▸";
+    opacity: .7;
+    transition: transform .18s ease;
+  }
+  .collapsible[open] > summary::after { transform: rotate(90deg); }
+  .collapsible .content { padding: 10px 12px 12px; }
+  .imports { display: flex; flex-direction: column; gap: 10px; }
+  .imports .block{
+    display:flex; flex-direction:column; gap:6px;
+    background: rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:10px;
+  }
+  .imports .block label{font-size:12px;color:var(--muted)}
+  .imports input[type=file]{padding:8px;border-radius:10px}
+
+  /* Add-room panel locked */
+  #addRoomForm[aria-disabled="true"] * { pointer-events:none; opacity:.5 }
+  #addRoomForm[aria-disabled="true"] { filter: grayscale(.2) }
+
+  /* ===== Compact mode toggled on <body data-compact="1"> ===== */
+  body[data-compact="1"] .tile { padding:10px }
+  body[data-compact="1"] .tile .big { font-size:22px }
+  body[data-compact="1"] .dashboard { gap:10px }
+  body[data-compact="1"] .panel { padding:12px }
+  body[data-compact="1"] .control-group { margin-bottom:10px }
+  body[data-compact="1"] input, 
+  body[data-compact="1"] select, 
+  body[data-compact="1"] .controls .btn { padding:8px 10px; font-size:13px; border-radius:10px }
+  body[data-compact="1"] .floor { padding:10px }
+  body[data-compact="1"] .rooms { gap:8px }
+  body[data-compact="1"] .room { padding:10px; border-radius:12px }
+  body[data-compact="1"] .cap-input { width:54px }
+  body[data-compact="1"] .beds { gap:4px }
+  body[data-compact="1"] .bed { border-radius:10px; padding:4px; }
+  body[data-compact="1"] .chip { padding:5px; border-radius:8px }
+  body[data-compact="1"] .chip .name { font-size:12px }
+  body[data-compact="1"] .chip .meta { font-size:10px }
+
+  @media (max-width: 1200px){ .dashboard{ grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 800px){ .dashboard{ grid-template-columns: repeat(2, 1fr); } }
+
+  /* pastille compteur dans l'entête */
+.badge-pill{
+  display:inline-block;
+  min-width:22px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(239,68,68,.18);
+  border:1px solid rgba(239,68,68,.35);
+  color:#fff;
+  font-size:12px;
+  line-height:1.4;
+  margin-left:12px;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="error" class="error-banner"></div>
+  <header>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="logo"></div>
+      <h1>Gestion des chambres · CFA — <span style="opacity:.7">v4</span></h1>
+    </div>
+    <div class="hint">Version compacte avec filtres et ajout sécurisé.</div>
+  </header>
+
+  <section class="dashboard">
+    <div class="tile">
+      <h3>Taux d'occupation</h3>
+      <div class="big" id="stat-occupancy">0%</div>
+      <div class="progress"><div class="bar" id="bar-occupancy" style="width:0%"></div></div>
+    </div>
+    <div class="tile">
+      <h3>Filles / Garçons</h3>
+      <div class="big"><span id="stat-f">0</span> / <span id="stat-m">0</span></div>
+      <div class="progress"><div class="bar" id="bar-fm" style="width:0%"></div></div>
+    </div>
+    <div class="tile">
+      <h3>Mineurs / Majeurs</h3>
+      <div class="big"><span id="stat-minor">0</span> / <span id="stat-adult">0</span></div>
+      <div class="progress"><div class="bar" id="bar-age" style="width:0%"></div></div>
+    </div>
+    <div class="tile">
+      <h3>Résidents / Non-résidents</h3>
+      <div class="big"><span id="stat-resident">0</span> / <span id="stat-nonresident">0</span></div>
+      <div class="progress"><div class="bar" id="bar-res" style="width:0%"></div></div>
+    </div>
+    <div class="tile">
+      <h3>Lits occupés</h3>
+      <div class="big"><span id="beds-occupied">0</span> / <span id="beds-total">0</span></div>
+      <div class="hint" id="beds-per-floor"></div>
+    </div>
+  </section>
+
+  <section class="layout">
+    <aside class="panel controls">
+      <div class="control-group">
+        <button id="btnReinit" class="btn primary">Ré-initialiser (mock + répartition)</button>
+        <div class="hint">Regénère 40 personnes (mock), planning S1..S10 et placement aléatoire.</div>
+      </div>
+
+
+<div class="control-group">
+        <details id="addRoomPanel" class="collapsible">
+          <summary>🛏️ Gestion des Lits <span class="hint">Masquer / Afficher</span></summary>
+          <div class="content">
+      <div class="control-group">
+        <label>Semaine sélectionnée</label>
+        <select id="selectWeek"></select>
+      </div>
+
+      <div class="control-group" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn warn" id="btnClearNonResidents">Vider les lits (sauf résidents)</button>
+        <button class="btn primary" id="btnRandomAssign">Remplir au hasard</button>
+        <button class="btn warn" id="btnClearResidents">Vider les lits des résidents</button>
+        
+      </div>
+
+      
+
+  </div>
+  </details>
+</div>
+
+
+
+
+
+      <!-- Affichage + filtres -->
+      
+      
+      
+<div class="control-group">
+        <details id="addRoomPanel" class="collapsible">
+          <summary> 🔎 Gestion de l'affichage <span class="hint">Masquer / Afficher</span></summary>
+          <div class="content">      
+      
+      <div class="control-group">
+        <label>Affichage</label>
+        <div class="row">
+          <label class="hint"><input type="checkbox" id="toggleCompact"> Compact</label>
+        </div>
+        <div class="row">
+          <label class="hint"><input type="checkbox" id="toggleOnlyFree"> Lits libres</label>
+          <label class="hint"><input type="checkbox" id="toggleOnlyViolations"> Uniquement en alerte</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Filtrer par étage (multi)</label>
+        <select id="filterFloorsMulti" multiple size="5" style="width:100%"></select>
+        <div class="row">
+          <button class="btn" id="btnFloorsAll">Tous</button>
+          <button class="btn" id="btnFloorsNone">Aucun</button>
+        </div>
+        <div class="hint">Sélection multiple: Ctrl/Cmd+clic</div>
+      </div>
+
+      <div class="control-group">
+        <label>Étage(s) dédié(s) aux filles</label>
+        <select id="selectGirlsFloors" multiple size="4"></select>
+      </div>
+
+      <div class="control-group">
+        <label>Taille d'un groupe hôtel</label>
+        <input id="hotelGroupSize" type="number" min="2" max="6" value="3">
+      </div>
+    </div>
+  </details>
+</div>
+      
+
+      <hr style="border:none;height:1px;background:rgba(255,255,255,.12);margin:8px 0">
+
+      <!-- Ajouter une chambre (collapsible + password, auto-relock) -->
+      <div class="control-group">
+        <details id="addRoomPanel" class="collapsible">
+          <summary>➕ Ajouter une chambre <span class="hint">Masquer / Afficher</span></summary>
+          <div class="content">
+            <div id="addRoomLock" class="imports block">
+              <label>Sécurité</label>
+              <div class="row">
+                <input id="addRoomPwd" type="password" placeholder="Mot de passe" style="width:160px">
+                <button class="btn" id="btnAddRoomUnlock">Déverrouiller</button>
+              </div>
+              <div class="hint">Entrez <code>Bordeaux</code> pour déverrouiller ce panneau.</div>
+            </div>
+
+            <div id="addRoomForm" class="imports" aria-disabled="true">
+              <div class="block">
+                <label>Ajouter une chambre</label>
+                <div class="row">
+                  <select id="addRoomFloor"></select>
+                  <input id="addRoomNumber" type="text" placeholder="Numéro (ex: 106)" style="min-width:120px">
+                </div>
+                <div class="row">
+                  <input id="addRoomCapacity" type="number" min="1" max="5" value="3" style="width:120px">
+                  <button class="btn" id="btnSuggestRoomNumber" title="Proposer un numéro libre">Proposer numéro</button>
+                  <button class="btn primary" id="btnAddRoom">Ajouter la chambre</button>
+                </div>
+                <div class="hint">Capacité 1–5 (A..E). Numéro unique sur l'étage.</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <hr style="border:none;height:1px;background:rgba(255,255,255,.12);margin:8px 0">
+
+      <!-- Imports repliables -->
+      <div class="control-group">
+        <details id="importsPanel" class="collapsible" open>
+          <summary>📥 Imports (JSON) <span class="hint">Masquer / Afficher</span></summary>
+          <div class="content">
+            <div class="imports">
+              <div class="block">
+                <label>Planning (JSON)</label>
+                <input type="file" id="filePlanning" accept="application/json">
+                <button class="btn" id="btnImportPlanning">Importer planning</button>
+              </div>
+              <div class="block">
+                <label>Résidents (JSON)</label>
+                <input type="file" id="fileResidents" accept="application/json">
+                <button class="btn" id="btnImportResidents">Importer résidents</button>
+              </div>
+              <div class="block">
+                <label>Apprentis formation (JSON)</label>
+                <input type="file" id="fileFormation" accept="application/json">
+                <button class="btn" id="btnImportFormation">Importer formation</button>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:8px">
+              Le planning décide qui est présent (1) par semaine. Les résidents annuels sont toujours présents.
+            </div>
+          </div>
+        </details>
+      </div>
+    </aside>
+
+    <main class="panel"><div id="floors" class="floors"></div></main>
+
+    <aside class="panel">
+  <h3>À l'hôtel <span id="hotelOverflowBadge" class="badge-pill">0</span></h3>
+  <div id="hotelList" class="floors"></div>
+</aside>
+
+  </section>
+</div>
+
+<script>
+(function(){
+
+  function computeHotelOverflowCount(){
+  const present = peoplePresentForWeek(state.selectedWeek);          // seulement ceux "présents" cette semaine
+  const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+  // Apprentis = non-résidents (ou simplement pas resident_annuel), non placés
+  const traineesOverflow = present.filter(p => !p.resident_annuel && !idsInBeds.has(p.id));
+  return traineesOverflow.length;
+}
+
+function renderHotelOverflowBadge(){
+  const el = document.getElementById('hotelOverflowBadge');
+  if(!el) return;
+  el.textContent = computeHotelOverflowCount();
+}
+
+  // =========================
+  // 0) Infrastructure & State
+  // =========================
+  const errBox = document.getElementById('error');
+  window.addEventListener('error', (e)=>{
+    errBox.style.display='block';
+    errBox.textContent = 'Erreur JS : ' + (e.message || e.error);
+    console.error(e);
+  });
+
+  const bedLetters=['A','B','C','D','E']; // max 5 lits / chambre
+  const today=new Date();
+  const shuffle=a=>a.sort(()=>Math.random()-.5);
+
+  // Date utils robustes
+  function parseDateSafe(v){
+    if(!v) return null;
+    if(v instanceof Date) return isNaN(v)? null : v;
+    if(typeof v === 'string'){
+      const d = new Date(v);
+      return isNaN(d) ? null : d;
+    }
+    return null;
+  }
+  function age(d){
+    const dd = parseDateSafe(d);
+    if(!dd) return null;
+    return new Date(today.getTime() - dd.getTime()).getUTCFullYear() - 1970;
+  }
+  function isMinor(d){ const a = age(d); return a===null ? false : a<18; }
+
+  const bedBadge=(room,bed)=>room.floorId+'-'+room.number+'-'+bed.label;
+
+  const state={
+    people:[],        // toutes personnes connues (vue cache)
+    formation:[],     // apprentis formation (rows normalisés)
+    planning:{weekKeys:[], rows:[]},
+    building:{
+      floors:[
+        {id:'E1',name:'1er',rooms:[]},
+        {id:'E2',name:'2e',rooms:[]},
+        {id:'E3',name:'3e',rooms:[]},
+        {id:'E4',name:'4e',rooms:[]},
+      ],
+      girlsFloors:new Set(['E4'])
+    },
+    hotelWaitlist:[],
+    selectedWeek:null,
+    ui:{
+      addRoomUnlocked:false,
+      compact:false,
+      onlyFree:false,
+      onlyViolations:false,
+      floorsSelected:[]
+    },
+    dataSources:{
+      residents:[],
+      apprentices:[]
+    }
+  };
+
+  // Normalisation clés planning/groupes
+  function normalizeKey(s){
+    if(!s) return '';
+    let k = String(s).trim().toLowerCase();
+    k = k.replace(/-[a-f0-9]{6,}$/i, '');
+    k = k.replace(/[_\s]+/g,'-').replace(/-+/g,'-');
+    return k;
+  }
+
+  // ==========================
+  // 1) Génération / Bâtiment
+  // ==========================
+  const makeRoom=(floorId,number,capacity)=>({
+    id:floorId+'-'+number, floorId, number, capacity,
+    beds:Array.from({length:capacity},(_,i)=>({label:bedLetters[i],personId:null}))
+  });
+
+  function bootstrapRooms(){
+    const blueprints={
+      E1:[{num:'101',cap:1},{num:'102',cap:2},{num:'103',cap:5},{num:'104',cap:5},{num:'105',cap:5},{num:'106',cap:5},{num:'107',cap:5},{num:'108',cap:2},{num:'109',cap:1},{num:'110',cap:2},{num:'111',cap:2},{num:'112',cap:2},{num:'113',cap:2},{num:'114',cap:2},{num:'115',cap:2},{num:'116',cap:2},{num:'117',cap:2},{num:'118',cap:2},{num:'119',cap:2},{num:'120',cap:2},{num:'121',cap:2},{num:'122',cap:1},{num:'123',cap:2},{num:'124',cap:1},{num:'125',cap:2},{num:'126',cap:2},{num:'127',cap:1},{num:'128',cap:2},{num:'129',cap:2},{num:'130',cap:2}],
+      E2:[{num:'201',cap:1},{num:'202',cap:2},{num:'203',cap:2},{num:'204',cap:2},{num:'205',cap:2},{num:'206',cap:2},{num:'207',cap:2},{num:'208',cap:2},{num:'209',cap:1},{num:'210',cap:2},{num:'211',cap:2},{num:'212',cap:2},{num:'213',cap:2},{num:'214',cap:2},{num:'215',cap:2},{num:'216',cap:2},{num:'217',cap:1},{num:'218',cap:1},{num:'219',cap:2},{num:'220',cap:2},{num:'221',cap:2},{num:'222',cap:2},{num:'223',cap:2},{num:'224',cap:2},{num:'225',cap:2},{num:'226',cap:2},{num:'227',cap:2},{num:'228',cap:2},{num:'229',cap:2},{num:'230',cap:2},{num:'231',cap:1},{num:'232',cap:2},{num:'233',cap:1},{num:'234',cap:2},{num:'235',cap:1},{num:'236',cap:2},{num:'237',cap:2},{num:'238',cap:2},{num:'239',cap:2}],
+      E3:[{num:'301',cap:1},{num:'302',cap:2},{num:'303',cap:2},{num:'304',cap:2},{num:'305',cap:3},{num:'306',cap:2},{num:'307',cap:2},{num:'308',cap:2},{num:'309',cap:1},{num:'310',cap:2},{num:'311',cap:2},{num:'312',cap:2},{num:'313',cap:2},{num:'314',cap:2},{num:'315',cap:2},{num:'316',cap:2},{num:'317',cap:1},{num:'318',cap:1}],
+      E4:[{num:'401',cap:1},{num:'402',cap:2},{num:'403',cap:2},{num:'404',cap:2},{num:'405',cap:2},{num:'406',cap:2},{num:'407',cap:2},{num:'408',cap:2},{num:'409',cap:1},{num:'410',cap:2},{num:'411',cap:2},{num:'412',cap:2},{num:'413',cap:2},{num:'414',cap:2},{num:'415',cap:2},{num:'416',cap:2},{num:'417',cap:1},{num:'418',cap:1}]
+    };
+    for(const f of state.building.floors){
+      f.rooms = blueprints[f.id].map(r=>makeRoom(f.id,r.num,r.cap));
+    }
+  }
+
+  // ==========================
+  // 2) Règles & Placement
+  // ==========================
+  function findPersonById(pid){
+    return state.dataSources.residents.find(x=>x.id===pid)
+        || state.dataSources.apprentices.find(x=>x.id===pid)
+        || state.people.find(x=>x.id===pid)
+        || state.formation.find(x=>x.id===pid);
+  }
+  const roomHasAdult=(room)=>room.beds.some(b=>b.personId && !isMinor(findPersonById(b.personId)?.dob));
+  const roomHasMinor=(room)=>room.beds.some(b=>b.personId &&  isMinor(findPersonById(b.personId)?.dob));
+  function roomSex(room){
+    let s=null;
+    for(const b of room.beds){
+      if(!b.personId) continue;
+      const p=findPersonById(b.personId);
+      if(!p) continue;
+      if(!s) s=p.sexe; else if(s!==p.sexe) return null;
+    }
+    return s;
+  }
+  function canPlaceInRoom(person,room){
+    if(person.sexe==='F' && !state.building.girlsFloors.has(room.floorId)) return false;
+    if(person.sexe==='M' &&  state.building.girlsFloors.has(room.floorId)) return false;
+    const hasMinor=roomHasMinor(room), hasAdult=roomHasAdult(room), isM=isMinor(person.dob);
+    if(hasMinor && !isM) return false;
+    if(hasAdult && isM) return false;
+    const sx=roomSex(room); if(sx && sx!==person.sexe) return false;
+    return !!room.beds.find(b=>!b.personId);
+  }
+  function placePersonInFirstFit(person){
+    const rooms=shuffle(state.building.floors.flatMap(f=>f.rooms).slice());
+    for(const r of rooms){
+      if(canPlaceInRoom(person,r)){
+        const bed=r.beds.find(b=>!b.personId); bed.personId=person.id; return {room:r,bed};
+      }
+    }
+    return null;
+  }
+
+  // ==========================
+  // 3) Planning & Présence
+  // ==========================
+  let PLANNING_INDEX = new Map(); // groupCode -> Map(weekKey->0/1)
+
+  function buildPlanningIndex(){
+    PLANNING_INDEX = new Map();
+    const rows = (state.planning && state.planning.rows) ? state.planning.rows : [];
+    for(const row of rows){
+      const g = row.id || row.key || row.section || row.name;
+      const present = row.present || {};
+      const m = new Map();
+      for(const wk of state.planning.weekKeys){
+        m.set(wk, Number(present[wk] || 0));
+      }
+      PLANNING_INDEX.set(g, m);
+    }
+  }
+  function normalizeWeekKey(week){
+    if(!state.planning || !state.planning.weekKeys) return null;
+    if(state.planning.weekKeys.includes(week)) return week;
+    const tryKey = String(week||'').trim().toUpperCase();
+    if(state.planning.weekKeys.includes(tryKey)) return tryKey;
+    return state.planning.weekKeys[0] || null;
+  }
+  function isGroupPresentThisWeek(groupCode, wk){
+    if(!groupCode) return false;
+    const m = PLANNING_INDEX.get(groupCode);
+    if(!m) return false;
+    return !!Number(m.get(wk) || 0);
+  }
+
+  function peoplePresentForWeek(week){
+    const wk = normalizeWeekKey(week || state.selectedWeek);
+    if(!wk) return [];
+    const residents = state.dataSources.residents.slice(); // tjs présents
+    const apprentices = state.dataSources.apprentices.filter(p => p.groupCode && isGroupPresentThisWeek(p.groupCode, wk));
+    return [...residents, ...apprentices];
+  }
+
+  // ================
+  // 4) Anti-doublons
+  // ================
+  function getAllBeds(){
+    return state.building.floors.flatMap(f =>
+      f.rooms.flatMap(r => r.beds.map(b => ({ room: r, bed: b })))
+    );
+  }
+  function enforceUniqueAssignments(){
+    const seen = new Set();
+    for(const {bed} of getAllBeds()){
+      const pid = bed.personId;
+      if(!pid) continue;
+      if(seen.has(pid)){
+        bed.personId = null;
+        if(!state.hotelWaitlist.includes(pid)) state.hotelWaitlist.push(pid);
+      } else seen.add(pid);
+    }
+  }
+
+  // ======================
+  // 5) UI utilitaires
+  // ======================
+  function autosizeBedsInRoom(roomCardEl){
+    let maxChip = 0;
+    roomCardEl.querySelectorAll('.bed .chip').forEach(chip=>{
+      if(chip.classList.contains('empty')) return;
+      maxChip = Math.max(maxChip, chip.offsetHeight);
+    });
+    const minH = Math.max(54, maxChip + 18);
+    roomCardEl.style.setProperty('--bed-min', minH + 'px');
+  }
+  function computeBedCounts(){
+    const per = state.building.floors.map(f=>{
+      const beds = f.rooms.reduce((a,r)=>a+r.capacity,0);
+      const occ  = f.rooms.reduce((a,r)=>a+r.beds.filter(b=>b.personId).length,0);
+      return { id:f.id, name:f.name, beds, occ };
+    });
+    const totalBeds = per.reduce((a,x)=>a+x.beds,0);
+    const totalOcc  = per.reduce((a,x)=>a+x.occ,0);
+    return { totalBeds, totalOcc, per };
+  }
+
+  // ======================
+  // 6) RENDER
+  // ======================
+  function renderDashboard(){
+    const present = peoplePresentForWeek(state.selectedWeek);
+    const girls = present.filter(p=>p.sexe==='F').length;
+    const boys = present.filter(p=>p.sexe==='M').length;
+    const minors = present.filter(p=>isMinor(p.dob)).length;
+    const adults = present.length - minors;
+    const resAnnual = present.filter(p=>p.resident_annuel).length;
+    const nonRes = present.length - resAnnual;
+    const totalBeds = state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.capacity,0),0);
+    const occupied = state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.beds.filter(b=>b.personId).length,0),0);
+    const occ = totalBeds? Math.round(occupied/totalBeds*100) : 0;
+
+    const counts = computeBedCounts();
+    document.getElementById('beds-occupied').textContent = counts.totalOcc;
+    document.getElementById('beds-total').textContent    = counts.totalBeds;
+    document.getElementById('beds-per-floor').innerHTML  = counts.per.map(f => `${f.name}: ${f.occ}/${f.beds}`).join(' · ');
+
+    document.getElementById('stat-occupancy').textContent = occ+'%';
+    document.getElementById('bar-occupancy').style.width = occ+'%';
+    document.getElementById('stat-f').textContent=girls;
+    document.getElementById('stat-m').textContent=boys;
+    document.getElementById('bar-fm').style.width = (present.length? Math.round(girls/present.length*100):0)+'%';
+    document.getElementById('stat-minor').textContent=minors;
+    document.getElementById('stat-adult').textContent=adults;
+    document.getElementById('bar-age').style.width = (present.length? Math.round(minors/present.length*100):0)+'%';
+    document.getElementById('stat-resident').textContent=resAnnual;
+    document.getElementById('stat-nonresident').textContent=nonRes;
+    document.getElementById('bar-res').style.width = (present.length? Math.round(resAnnual/present.length*100):0)+'%';
+  }
+
+  function roomViolations(room){
+    const hasMinor=roomHasMinor(room), hasAdult=roomHasAdult(room);
+    let v=false, reasons=[];
+    if(hasMinor && hasAdult){ v=true; reasons.push('Mineur/Majeur mélangés'); }
+    let seen=new Set();
+    for(const b of room.beds){
+      if(!b.personId) continue;
+      const p=findPersonById(b.personId);
+      if(p) seen.add(p.sexe);
+    }
+    if(seen.size>1){ v=true; reasons.push('Mixité F/G'); }
+    for(const b of room.beds){
+      if(!b.personId) continue;
+      const p=findPersonById(b.personId);
+      if(!p) continue;
+      if(p.sexe==='F' && !state.building.girlsFloors.has(room.floorId)){ v=true; reasons.push('Fille hors étage dédié'); break; }
+      if(p.sexe==='M' &&  state.building.girlsFloors.has(room.floorId)){ v=true; reasons.push('Garçon sur étage filles'); break; }
+    }
+    return {violation:v, reasons};
+  }
+
+  function personChip(p){
+    const d=document.createElement('div'); d.className='chip';
+    if(isMinor(p.dob)) d.classList.add('minor');
+    if(p.sexe==='F') d.classList.add('female');
+    const nm=document.createElement('div'); nm.className='name'; nm.textContent=(p.prenom||'?')+' '+(p.nom||'?');
+    const mt=document.createElement('div'); mt.className='meta'; mt.textContent=(p.sexe==='F'?'Fille':'Garçon')+' · '+(isMinor(p.dob)?'Mineur':'Majeur')+' · '+(p.section||'—');
+    d.appendChild(nm); d.appendChild(mt);
+    if(p.resident_annuel){ const tag=document.createElement('div'); tag.className='badge'; tag.textContent='Résident'; d.appendChild(tag); }
+    d.draggable=true; d.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',p.id));
+    return d;
+  }
+
+  // Change capacity (global), respecte verrou
+  function changeRoomCapacity(roomId, newCap){
+    if(!state.ui.addRoomUnlocked){ return; }
+    const r = state.building.floors.flatMap(f=>f.rooms).find(rr=>rr.id===roomId);
+    if(!r) return;
+    if(!Number.isInteger(newCap)) { alert('Capacité invalide.'); return; }
+    const MIN=1, MAX=bedLetters.length;
+    const occupied = r.beds.filter(b=>b.personId).length;
+    if(newCap < Math.max(MIN, occupied)){ alert(`Impossible de descendre sous ${Math.max(MIN, occupied)} lit(s).`); return; }
+    if(newCap > MAX){ alert(`Capacité max ${MAX} lits.`); return; }
+    if(newCap === r.capacity) return;
+
+    if(newCap > r.capacity){
+      for(let i=r.capacity; i<newCap; i++) r.beds.push({label: bedLetters[i], personId: null});
+    } else {
+      for(let i=r.beds.length-1; i>=newCap; i--){
+        const b=r.beds[i]; if(b.personId){ alert('Un lit à supprimer est occupé.'); return; }
+        r.beds.pop();
+      }
+    }
+    r.capacity = newCap;
+    renderAll();
+  }
+
+  function renderFloors(){
+    const root=document.getElementById('floors'); root.innerHTML='';
+
+    for(const floor of state.building.floors){
+      if (state.ui.floorsSelected.length && !state.ui.floorsSelected.includes(floor.id)) continue;
+
+      const box=document.createElement('div'); box.className='floor';
+      const h=document.createElement('div'); h.style.display='flex'; h.style.justifyContent='space-between'; h.style.alignItems='center';
+      h.innerHTML='<strong>'+floor.name+'</strong><span class="hint">'+(state.building.girlsFloors.has(floor.id)?'Étage filles':'')+'</span>';
+      box.appendChild(h);
+
+      const rooms=document.createElement('div'); rooms.className='rooms';
+
+      const visibleRooms = floor.rooms.filter(room=>{
+        if(state.ui.onlyFree){
+          const hasFree = room.beds.some(b=>!b.personId);
+          if(!hasFree) return false;
+        }
+        if(state.ui.onlyViolations){
+          const v = roomViolations(room);
+          if(!v.violation) return false;
+        }
+        return true;
+      });
+
+      for(const room of visibleRooms){
+        const card=document.createElement('div'); card.className='room'; card.dataset.capacity = room.capacity;
+        const viol=roomViolations(room);
+        if(viol.violation) card.classList.add('violation');
+        card.title=viol.reasons.join(' • ');
+        if(room.beds.every(b => b.personId)){ card.classList.add('full'); }
+
+        // header + capacity editor
+        const rhead=document.createElement('div');
+        rhead.style.display='flex'; rhead.style.justifyContent='space-between'; rhead.style.alignItems='center';
+        const left=document.createElement('div'); left.innerHTML='<strong>Ch. '+room.number+'</strong>';
+        const right=document.createElement('div'); right.className='cap-editor';
+        const minus=document.createElement('button'); minus.className='cap-btn'; minus.textContent='–';
+        const inp=document.createElement('input'); inp.className='cap-input'; inp.type='number'; inp.min='1'; inp.max=bedLetters.length.toString(); inp.value=room.capacity;
+        const plus=document.createElement('button'); plus.className='cap-btn'; plus.textContent='+';
+        const capHint=document.createElement('span'); capHint.className='hint'; capHint.textContent='lits';
+        right.appendChild(minus); right.appendChild(inp); right.appendChild(plus); right.appendChild(capHint);
+        rhead.appendChild(left); rhead.appendChild(right);
+
+        function syncButtons(){
+          const occupied = room.beds.filter(b=>b.personId).length;
+          const locked = !state.ui.addRoomUnlocked;
+          const disableMinus = Number(inp.value) <= Math.max(1, occupied);
+          const disablePlus  = Number(inp.value) >= bedLetters.length;
+          minus.disabled = locked || disableMinus;
+          plus.disabled  = locked || disablePlus;
+          inp.disabled   = locked;
+        }
+        minus.addEventListener('click', ()=>{
+          const newVal = Math.max(1, Number(inp.value)-1);
+          if(newVal !== Number(inp.value)){ inp.value = newVal; changeRoomCapacity(room.id, newVal); }
+        });
+        plus.addEventListener('click', ()=>{
+          const newVal = Math.min(bedLetters.length, Number(inp.value)+1);
+          if(newVal !== Number(inp.value)){ inp.value = newVal; changeRoomCapacity(room.id, newVal); }
+        });
+        inp.addEventListener('change', ()=>{
+          const val = parseInt(inp.value,10);
+          changeRoomCapacity(room.id, val);
+        });
+
+        const beds=document.createElement('div'); beds.className='beds';
+        for(const b of room.beds){
+          const slot=document.createElement('div'); slot.className='bed'; slot.dataset.roomId=room.id; slot.dataset.bedLabel=b.label;
+          slot.addEventListener('dragover',e=>e.preventDefault());
+          slot.addEventListener('drop',function(e){
+            const pid=e.dataTransfer.getData('text/plain');
+            const person=findPersonById(pid);
+            if(b.personId){ alert('Lit occupé'); return; }
+            if(!person){ alert('Jeune introuvable'); return; }
+            if(!canPlaceInRoom(person,room)){ alert('Placement interdit par les règles'); return; }
+            // retire la personne de son ancien lit
+            for(const f of state.building.floors){ for(const r of f.rooms){ for(const bb of r.beds){ if(bb.personId===pid) bb.personId=null; } } }
+            b.personId=pid; state.hotelWaitlist=state.hotelWaitlist.filter(x=>x!==pid); renderAll();
+          });
+          const lbl=document.createElement('div'); lbl.className='bed-label'; lbl.innerHTML='<span>Lit '+b.label+'</span><span class="badge">'+bedBadge(room,b)+'</span>';
+          slot.appendChild(lbl);
+          if(b.personId){
+            const pp = findPersonById(b.personId);
+            slot.appendChild(personChip(pp || {prenom:'?',nom:'?'}));
+          } else {
+            const empty=document.createElement('div'); empty.className='chip empty'; empty.innerHTML='<div class="name">Libre</div><div class="meta">—</div>'; slot.appendChild(empty);
+          }
+          beds.appendChild(slot);
+        }
+        card.appendChild(rhead); syncButtons(); card.appendChild(beds); autosizeBedsInRoom(card); rooms.appendChild(card);
+      }
+      box.appendChild(rooms); root.appendChild(box);
+    }
+  }
+
+  function renderHotel(){
+    const box=document.getElementById('hotelList'); box.innerHTML='';
+    const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+    const present = peoplePresentForWeek(state.selectedWeek);
+    const notPlaced = present.filter(p => !idsInBeds.has(p.id));
+
+    if(!notPlaced.length){ box.innerHTML='<div class="hint">Personne en attente.</div>'; return; }
+
+    const bySection = {};
+    notPlaced.forEach(p=>{
+      const key = p.section || 'Sans section';
+      (bySection[key] = bySection[key] || []).push(p);
+    });
+
+    for(const [section, people] of Object.entries(bySection)){
+      const card=document.createElement('div'); card.className='room hotel-card';
+      const title=document.createElement('div'); title.className='title'; title.textContent=section;
+      card.appendChild(title);
+      people.forEach(p => card.appendChild(personChip(p)));
+      box.appendChild(card);
+    }
+  }
+
+  function renderSelectors(){
+    // weeks
+    const sel=document.getElementById('selectWeek'); sel.innerHTML='';
+    for(const wk of state.planning.weekKeys){ const opt=document.createElement('option'); opt.value=wk; opt.textContent=wk; sel.appendChild(opt); }
+    if(state.planning.weekKeys.length){
+      sel.value = state.selectedWeek || state.planning.weekKeys[0];
+      state.selectedWeek = sel.value;
+    }
+
+    // floors for girls
+    const gf=document.getElementById('selectGirlsFloors'); gf.innerHTML='';
+    for(const f of state.building.floors){
+      const opt=document.createElement('option'); opt.value=f.id; opt.textContent=f.name+' ('+f.id+')';
+      if(state.building.girlsFloors.has(f.id)) opt.selected=true; gf.appendChild(opt);
+    }
+
+    // filtre étage (multi)
+    const floorsMulti = document.getElementById('filterFloorsMulti');
+    floorsMulti.innerHTML = '';
+    for(const f of state.building.floors){
+      const opt=document.createElement('option'); opt.value=f.id; opt.textContent = f.name+' ('+f.id+')';
+      if(!state.ui.floorsSelected.length || state.ui.floorsSelected.includes(f.id)) opt.selected=true;
+      floorsMulti.appendChild(opt);
+    }
+    if(!state.ui.floorsSelected.length){
+      state.ui.floorsSelected = state.building.floors.map(f=>f.id);
+    }
+  }
+
+  function renderAll(){
+    enforceUniqueAssignments();
+    renderDashboard();
+    renderSelectors();
+    renderFloors();
+    renderHotel();
+    applyEditorsLock(); // synchronise le verrou sur ce qui vient d'être rendu
+    renderHotelOverflowBadge();
+
+  }
+
+  // ======================
+  // 7) Actions
+  // ======================
+  function randomAssign(){
+    enforceUniqueAssignments();
+    const present = peoplePresentForWeek(state.selectedWeek);
+    const assignedIds = new Set(getAllBeds().map(x => x.bed.personId).filter(Boolean));
+    const toPlace = present.filter(p => !assignedIds.has(p.id)).sort(() => Math.random() - 0.5);
+    for(const p of toPlace){
+      const res = placePersonInFirstFit(p);
+      if(!res && !state.hotelWaitlist.includes(p.id)){
+        state.hotelWaitlist.push(p.id);
+      }
+    }
+    renderAll();
+  }
+
+  // Ajout de chambre
+  function getFloorById(id){ return state.building.floors.find(f=>f.id===id); }
+  function roomExists(floor, number){ return floor.rooms.some(r=>r.number.toString()===number.toString()); }
+  function suggestNextRoomNumber(floorId){
+    const floor = getFloorById(floorId); if(!floor) return '';
+    const nums = floor.rooms.map(r=>r.number).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n,10)).sort((a,b)=>a-b);
+    if(nums.length){
+      let candidate = nums[nums.length-1] + 1;
+      const width = (''+nums[nums.length-1]).length;
+      const formatted = String(candidate).padStart(width, '0');
+      if(!roomExists(floor, formatted)) return formatted;
+    }
+    const d = floor.id.match(/^E(\d)$/);
+    if(d){
+      let base = (parseInt(d[1],10)*100)+1;
+      while(roomExists(floor, String(base))) base++;
+      return String(base);
+    }
+    let base=1;
+    while(roomExists(floor, String(base).padStart(3,'0'))) base++;
+    return String(base).padStart(3,'0');
+  }
+  function addRoomToFloor(floorId, number, capacity){
+    if(!state.ui.addRoomUnlocked){ return; }
+    const floor = getFloorById(floorId);
+    if(!floor){ alert('Étage introuvable.'); return; }
+    const cap = parseInt(capacity,10);
+    if(!Number.isInteger(cap) || cap<1 || cap>bedLetters.length){ alert(`Capacité entre 1 et ${bedLetters.length}.`); return; }
+    const numStr = (number||'').toString().trim();
+    if(!numStr){ alert('Numéro de chambre requis.'); return; }
+    if(roomExists(floor, numStr)){ alert('Ce numéro existe déjà sur cet étage.'); return; }
+    const room = makeRoom(floorId, numStr, cap);
+    floor.rooms.push(room);
+    floor.rooms.sort((a,b)=>{
+      const na=parseInt(a.number,10), nb=parseInt(b.number,10);
+      if(!isNaN(na) && !isNaN(nb)) return na-nb;
+      return a.number.localeCompare(b.number, 'fr');
+    });
+    renderAll();
+  }
+
+  // ======================
+  // 8) Imports (JSON) & normalisation
+  // ======================
+  function ingestResidents(arrayLike){
+    state.dataSources.residents = (arrayLike || []).map(p => ({
+      ...p,
+      sexe: String(p.sexe||'M').toUpperCase()==='F'?'F':'M',
+      resident_annuel: true,
+      type_presence: 'resident',
+      dob: parseDateSafe(p.dob)
+    }));
+  }
+  function ingestApprentices(arrayLike){
+    state.dataSources.apprentices = (arrayLike || []).map(p => ({
+      ...p,
+      sexe: String(p.sexe||'M').toUpperCase()==='F'?'F':'M',
+      dob: parseDateSafe(p.dob)
+    }));
+  }
+  function rebuildPeopleCache(){
+    state.people = [...state.dataSources.residents, ...state.dataSources.apprentices];
+  }
+
+  function importPlanningJSON(obj){
+    if(!obj || !Array.isArray(obj.weekKeys) || !Array.isArray(obj.rows)){
+      alert('Planning JSON invalide'); return;
+    }
+    state.planning.weekKeys = obj.weekKeys.slice();
+    // accepte {id, present} ou {key/section/name, present}
+    state.planning.rows = obj.rows.map(r => ({
+      id: r.id || r.key || r.section || r.name,
+      present: r.present || {}
+    }));
+    state.selectedWeek = state.planning.weekKeys[0] || 'S1';
+    buildPlanningIndex();
+    renderAll();
+  }
+  function importResidentsJSON(arr){
+    if(!Array.isArray(arr)){ alert('Résidents JSON invalide'); return; }
+    ingestResidents(arr);
+    rebuildPeopleCache();
+    // on nettoie les lits avec ids obsolètes
+    const allIds = new Set(state.people.map(p=>p.id));
+    getAllBeds().forEach(({bed})=>{ if(bed.personId && !allIds.has(bed.personId)) bed.personId=null; });
+    renderAll();
+  }
+  function importFormationJSON(arr){
+    if(!Array.isArray(arr)){ alert('Formation JSON invalide'); return; }
+    ingestApprentices(arr);
+    rebuildPeopleCache();
+    const allIds = new Set(state.people.map(p=>p.id));
+    getAllBeds().forEach(({bed})=>{ if(bed.personId && !allIds.has(bed.personId)) bed.personId=null; });
+    renderAll();
+  }
+
+  // ======================
+  // 9) Mock data (réinit)
+  // ======================
+  function generateMockPeople(){
+    const last=["Martin","Bernard","Dubois","Thomas","Robert","Richard","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Bertrand","Roux","Vincent","Fournier","Morel","Girard","Andre","Lefevre","Mercier","Dupont","Lambert","Bonnet","Francois","Martinez"];
+    const fNames=["Chloé","Emma","Zoé","Léa","Manon","Camille","Sarah","Inès","Clara","Lola","Eva","Jade","Lou","Alice","Anna","Elsa","Maeva","Nina","Océane","Romane"];
+    const mNames=["Lucas","Noah","Tom","Léo","Hugo","Nathan","Ethan","Enzo","Louis","Gabriel","Arthur","Raphaël","Jules","Antoine","Théo","Adam","Maxime","Paul","Axel","Yanis"];
+    const sections=["Boulangerie","Menuiserie","Cuisine","Ébénisterie"];
+    function rdate(a,b){const da=new Date(a,0,1), db=new Date(b,11,31);const d=new Date(da.getTime()+Math.random()*(db-da));return d.toISOString().slice(0,10)}
+    const residents=[], apprentices=[];
+    for(let i=0;i<20;i++){
+      const sexe=i%2===0?'F':'M';
+      const prenom=sexe==='F'?fNames[i%fNames.length]:mNames[i%mNames.length];
+      const nom=last[(i*3)%last.length];
+      const dob=(i%4===0 || i%4===1)? rdate(2008,2010): rdate(2003,2006);
+      const section=sections[i%sections.length];
+      residents.push({id:'R'+(Date.now()+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'resident', resident_annuel:true, metier:section});
+    }
+    for(let i=0;i<20;i++){
+      const sexe=i%2===1?'F':'M';
+      const prenom=sexe==='F'?fNames[(i+5)%fNames.length]:mNames[(i+7)%mNames.length];
+      const nom=last[(i*5)%last.length];
+      const dob=rdate(2006,2009);
+      const section=sections[i%sections.length];
+      const groupCode = section.toLowerCase()+'-g'+((i%3)+1);
+      apprentices.push({id:'A'+(Date.now()+100+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'non-resident', resident_annuel:false, metier:section, groupCode});
+    }
+    ingestResidents(residents);
+    ingestApprentices(apprentices);
+    rebuildPeopleCache();
+  }
+  function generateMockPlanning(){
+    state.planning.weekKeys = Array.from({length:10}, (_,i)=>'S'+(i+1));
+    const rows = [];
+    const codes = Array.from(new Set(state.dataSources.apprentices.map(a=>a.groupCode))).slice(0,6);
+    for(const code of codes){
+      const present={};
+      state.planning.weekKeys.forEach((wk,idx)=>{ present[wk] = (idx%2===0)?1:0; });
+      rows.push({ id: code, present });
+    }
+    state.planning.rows = rows;
+    state.selectedWeek = state.planning.weekKeys[0];
+    buildPlanningIndex();
+  }
+
+  // ======================
+  // 10) Lock Add-Room + éditeurs
+  // ======================
+  const ADDROOM_KEY = "Bordeaux";
+  const addRoomForm   = document.getElementById('addRoomForm');
+  const addRoomLock   = document.getElementById('addRoomLock');
+  const addRoomPwd    = document.getElementById('addRoomPwd');
+  const btnUnlock     = document.getElementById('btnAddRoomUnlock');
+  const addRoomPanel  = document.getElementById('addRoomPanel');
+
+  function applyEditorsLock(){
+    const locked = !state.ui.addRoomUnlocked;
+    document.querySelectorAll('.cap-btn, .cap-input').forEach(el=>{
+      if(locked) el.setAttribute('disabled','disabled');
+      else el.removeAttribute('disabled');
+    });
+  }
+  function setAddRoomUnlocked(on){
+    state.ui.addRoomUnlocked = !!on;
+    if(state.ui.addRoomUnlocked){
+      addRoomForm?.removeAttribute('aria-disabled');
+      if(addRoomLock) addRoomLock.style.display = 'none';
+    }else{
+      addRoomForm?.setAttribute('aria-disabled','true');
+      if(addRoomLock) addRoomLock.style.display = '';
+      if(addRoomPwd){ addRoomPwd.value = ""; }
+    }
+    applyEditorsLock();
+  }
+  btnUnlock?.addEventListener('click', ()=>{
+    const pwd = (addRoomPwd?.value || '').trim();
+    if(pwd === ADDROOM_KEY){
+      setAddRoomUnlocked(true);
+    }else{
+      alert('Mot de passe incorrect');
+      addRoomPwd?.focus(); addRoomPwd?.select();
+    }
+  });
+  addRoomPanel?.addEventListener('toggle', ()=>{
+    if(!addRoomPanel.open){
+      setAddRoomUnlocked(false); // auto-relock
+    }
+  });
+
+  // ======================
+  // 11) Bind UI
+  // ======================
+  function bind(){
+    document.getElementById('btnReinit').addEventListener('click', ()=>{
+      bootstrapRooms(); generateMockPeople(); generateMockPlanning();
+      state.hotelWaitlist=[]; renderAll(); randomAssign();
+    });
+
+    document.getElementById('selectWeek').addEventListener('change', e=>{
+      state.selectedWeek = e.target.value; renderAll();
+    });
+
+    document.getElementById('selectGirlsFloors').addEventListener('change', e=>{
+      const vals = Array.from(e.target.selectedOptions).map(o=>o.value);
+      state.building.girlsFloors = new Set(vals);
+      renderAll();
+    });
+
+    document.getElementById('btnClearNonResidents').addEventListener('click', ()=>{
+      for(const f of state.building.floors){
+        for(const r of f.rooms){
+          for(const b of r.beds){
+            if(!b.personId) continue;
+            const p = findPersonById(b.personId);
+            if(p && !p.resident_annuel) b.personId=null;
+          }
+        }
+      }
+      renderAll();
+    });
+
+    document.getElementById('btnClearResidents').addEventListener('click', ()=>{
+  for(const f of state.building.floors){
+    for(const r of f.rooms){
+      for(const b of r.beds){
+        if(!b.personId) continue;
+        const p = findPersonById(b.personId);
+        if(p && p.resident_annuel) b.personId=null;
+      }
+    }
+  }
+  renderAll();
+});
+
+
+    document.getElementById('btnRandomAssign').addEventListener('click', randomAssign);
+
+    // Ajout de chambre actions
+    const floorSel = document.getElementById('addRoomFloor');
+    const numInput = document.getElementById('addRoomNumber');
+    const capInput = document.getElementById('addRoomCapacity');
+    document.getElementById('btnSuggestRoomNumber').addEventListener('click', ()=>{
+      const f = floorSel.value; if(!f) return;
+      numInput.value = suggestNextRoomNumber(f);
+    });
+    document.getElementById('btnAddRoom').addEventListener('click', ()=>{
+      addRoomToFloor(floorSel.value, numInput.value, capInput.value);
+      numInput.value = suggestNextRoomNumber(floorSel.value);
+    });
+
+    // Affichage / filtres
+    const toggleCompact = document.getElementById('toggleCompact');
+    const toggleOnlyFree = document.getElementById('toggleOnlyFree');
+    const toggleOnlyViol = document.getElementById('toggleOnlyViolations');
+
+    toggleCompact.checked = !!state.ui.compact;
+    document.body.setAttribute('data-compact', toggleCompact.checked ? '1' : '0');
+    toggleCompact.addEventListener('change', ()=>{
+      state.ui.compact = toggleCompact.checked;
+      document.body.setAttribute('data-compact', state.ui.compact ? '1' : '0');
+    });
+    toggleOnlyFree.checked = !!state.ui.onlyFree;
+    toggleOnlyFree.addEventListener('change', ()=>{ state.ui.onlyFree = toggleOnlyFree.checked; renderAll(); });
+    toggleOnlyViol.checked = !!state.ui.onlyViolations;
+    toggleOnlyViol.addEventListener('change', ()=>{ state.ui.onlyViolations = toggleOnlyViol.checked; renderAll(); });
+
+    const floorsMulti = document.getElementById('filterFloorsMulti');
+    const btnFloorsAll = document.getElementById('btnFloorsAll');
+    const btnFloorsNone = document.getElementById('btnFloorsNone');
+
+    floorsMulti.addEventListener('change', ()=>{
+      state.ui.floorsSelected = Array.from(floorsMulti.selectedOptions).map(o=>o.value);
+      renderAll();
+    });
+    btnFloorsAll.addEventListener('click', ()=>{
+      state.ui.floorsSelected = state.building.floors.map(f=>f.id);
+      for(const opt of floorsMulti.options) opt.selected = true;
+      renderAll();
+    });
+    btnFloorsNone.addEventListener('click', ()=>{
+      state.ui.floorsSelected = [];
+      for(const opt of floorsMulti.options) opt.selected = false;
+      renderAll();
+    });
+
+    // Imports
+    document.getElementById('btnImportPlanning').addEventListener('click', ()=>{
+      const f = document.getElementById('filePlanning').files[0];
+      if(!f) return alert('Choisissez un fichier Planning JSON');
+      const reader = new FileReader();
+      reader.onload = () => { try { const obj = JSON.parse(reader.result); importPlanningJSON(obj); } catch(e){ alert('JSON invalide (planning)'); } };
+      reader.readAsText(f);
+    });
+
+    document.getElementById('btnImportResidents').addEventListener('click', ()=>{
+      const f = document.getElementById('fileResidents').files[0];
+      if(!f) return alert('Choisissez un fichier Résidents JSON');
+      const reader = new FileReader();
+      reader.onload = () => { try { const arr = JSON.parse(reader.result); importResidentsJSON(arr); } catch(e){ alert('JSON invalide (résidents)'); } };
+      reader.readAsText(f);
+    });
+
+    document.getElementById('btnImportFormation').addEventListener('click', ()=>{
+      const f = document.getElementById('fileFormation').files[0];
+      if(!f) return alert('Choisissez un fichier Formation JSON');
+      const reader = new FileReader();
+      reader.onload = () => { try { const arr = JSON.parse(reader.result); importFormationJSON(arr); } catch(e){ alert('JSON invalide (formation)'); } };
+      reader.readAsText(f);
+    });
+  }
+
+  // ======================
+  // 12) Auto-start
+  // ======================
+  bootstrapRooms();
+  generateMockPeople();
+  generateMockPlanning();
+  bind();
+  renderAll();
+  randomAssign(); // placement initial
+
+  // Expose debug si besoin
+  window._state = state;
+
+})();
+</script>
+</body>
+</html>

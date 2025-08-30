@@ -32,13 +32,13 @@
   .floors{display:flex;flex-direction:column;gap:16px}
   .floor{padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.03)}
   .rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;grid-auto-flow:dense}
-  .room{padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(12,17,29,.7); min-width:0}
+  .room{padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(12,17,29,.7);min-width:0}
   .room[data-capacity="5"]{grid-column:span 2}
   @media (max-width:900px){ .room[data-capacity="5"]{grid-column:span 1} }
   .room.violation{border-color:var(--danger);box-shadow:0 0 0 2px rgba(239,68,68,.35) inset}
-  .room.full {background: rgba(34,211,238,.08); border-color: rgba(34,211,238,.3);}
+  .room.full{background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.3)}
   .beds{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .bed{min-height: var(--bed-min, 54px);border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}
+  .bed{min-height:var(--bed-min,54px);border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}
   .bed-label{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
   .chip{display:flex;flex-direction:column;gap:2px;border-radius:10px;padding:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:grab}
   .chip .name{font-size:13px;font-weight:700}
@@ -48,90 +48,42 @@
   .badge{font-size:10px;color:var(--badge)}
   .empty{opacity:.5}
   .error-banner{position:sticky;top:0;z-index:999;background:#220;color:#fff;border:1px solid #a00;padding:10px;border-radius:12px;margin-bottom:12px;display:none}
-
-  /* Capacité inline */
   .cap-editor{display:flex;align-items:center;gap:6px}
   .cap-input{width:64px;text-align:center}
   .cap-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--text);border-radius:10px;padding:6px 8px;cursor:pointer}
-  .cap-btn:disabled, .cap-input:disabled{opacity:.4;cursor:not-allowed}
-
-  /* Carte hôtel (en attente) */
-  .room.hotel-card{background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.25);display:flex;flex-direction:column;gap:6px}
+  .cap-btn:disabled,.cap-input:disabled{opacity:.4;cursor:not-allowed}
+  .room.hotel-card{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.25);display:flex;flex-direction:column;gap:6px}
   .room.hotel-card .title{font-weight:600;font-size:13px;opacity:.8;margin-bottom:4px}
-
-  /* --- Menu repliables --- */
-  .collapsible {
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 12px;
-    background: rgba(255,255,255,.04);
-    overflow: hidden;
-  }
-  .collapsible > summary {
-    list-style: none;
-    cursor: pointer;
-    padding: 10px 12px;
-    font-weight: 600;
-    display: flex; align-items: center; justify-content: space-between;
-    user-select: none;
-  }
-  .collapsible > summary::-webkit-details-marker { display: none; }
-  .collapsible > summary::after {
-    content: "▸";
-    opacity: .7;
-    transition: transform .18s ease;
-  }
-  .collapsible[open] > summary::after { transform: rotate(90deg); }
-  .collapsible .content { padding: 10px 12px 12px; }
-  .imports { display: flex; flex-direction: column; gap: 10px; }
-  .imports .block{
-    display:flex; flex-direction:column; gap:6px;
-    background: rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:12px; padding:10px;
-  }
+  .collapsible{border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.04);overflow:hidden}
+  .collapsible>summary{list-style:none;cursor:pointer;padding:10px 12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;user-select:none}
+  .collapsible>summary::-webkit-details-marker{display:none}
+  .collapsible>summary::after{content:"▸";opacity:.7;transition:transform .18s ease}
+  .collapsible[open]>summary::after{transform:rotate(90deg)}
+  .collapsible .content{padding:10px 12px 12px}
+  .imports{display:flex;flex-direction:column;gap:10px}
+  .imports .block{display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
   .imports .block label{font-size:12px;color:var(--muted)}
   .imports input[type=file]{padding:8px;border-radius:10px}
-
-  /* Add-room panel locked */
-  #addRoomForm[aria-disabled="true"] * { pointer-events:none; opacity:.5 }
-  #addRoomForm[aria-disabled="true"] { filter: grayscale(.2) }
-
-  /* ===== Compact mode toggled on <body data-compact="1"> ===== */
-  body[data-compact="1"] .tile { padding:10px }
-  body[data-compact="1"] .tile .big { font-size:22px }
-  body[data-compact="1"] .dashboard { gap:10px }
-  body[data-compact="1"] .panel { padding:12px }
-  body[data-compact="1"] .control-group { margin-bottom:10px }
-  body[data-compact="1"] input, 
-  body[data-compact="1"] select, 
-  body[data-compact="1"] .controls .btn { padding:8px 10px; font-size:13px; border-radius:10px }
-  body[data-compact="1"] .floor { padding:10px }
-  body[data-compact="1"] .rooms { gap:8px }
-  body[data-compact="1"] .room { padding:10px; border-radius:12px }
-  body[data-compact="1"] .cap-input { width:54px }
-  body[data-compact="1"] .beds { gap:4px }
-  body[data-compact="1"] .bed { border-radius:10px; padding:4px; }
-  body[data-compact="1"] .chip { padding:5px; border-radius:8px }
-  body[data-compact="1"] .chip .name { font-size:12px }
-  body[data-compact="1"] .chip .meta { font-size:10px }
-
-  @media (max-width: 1200px){ .dashboard{ grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 800px){ .dashboard{ grid-template-columns: repeat(2, 1fr); } }
-
-  /* pastille compteur dans l'entête */
-.badge-pill{
-  display:inline-block;
-  min-width:22px;
-  padding:2px 8px;
-  border-radius:999px;
-  background:rgba(239,68,68,.18);
-  border:1px solid rgba(239,68,68,.35);
-  color:#fff;
-  font-size:12px;
-  line-height:1.4;
-  margin-left:12px;
-}
-
+  #addRoomForm[aria-disabled="true"] *{pointer-events:none;opacity:.5}
+  #addRoomForm[aria-disabled="true"]{filter:grayscale(.2)}
+  body[data-compact="1"] .tile{padding:10px}
+  body[data-compact="1"] .tile .big{font-size:22px}
+  body[data-compact="1"] .dashboard{gap:10px}
+  body[data-compact="1"] .panel{padding:12px}
+  body[data-compact="1"] .control-group{margin-bottom:10px}
+  body[data-compact="1"] input,body[data-compact="1"] select,body[data-compact="1"] .controls .btn{padding:8px 10px;font-size:13px;border-radius:10px}
+  body[data-compact="1"] .floor{padding:10px}
+  body[data-compact="1"] .rooms{gap:8px}
+  body[data-compact="1"] .room{padding:10px;border-radius:12px}
+  body[data-compact="1"] .cap-input{width:54px}
+  body[data-compact="1"] .beds{gap:4px}
+  body[data-compact="1"] .bed{border-radius:10px;padding:4px}
+  body[data-compact="1"] .chip{padding:5px;border-radius:8px}
+  body[data-compact="1"] .chip .name{font-size:12px}
+  body[data-compact="1"] .chip .meta{font-size:10px}
+  @media (max-width:1200px){.dashboard{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:800px){.dashboard{grid-template-columns:repeat(2,1fr)}}
+  .badge-pill{display:inline-block;min-width:22px;padding:2px 8px;border-radius:999px;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.35);color:#fff;font-size:12px;line-height:1.4;margin-left:12px}
 </style>
 </head>
 <body>
@@ -180,16 +132,14 @@
         <div class="hint">Regénère 40 personnes (mock), planning S1..S10 et placement aléatoire.</div>
       </div>
 
-      <!-- Gestion des lits -->
       <div class="control-group">
-        <details id="bedsActionsPanel" class="collapsible">
+        <details id="bedsPanel" class="collapsible">
           <summary>🛏️ Gestion des Lits <span class="hint">Masquer / Afficher</span></summary>
           <div class="content">
             <div class="control-group">
               <label>Semaine sélectionnée</label>
               <select id="selectWeek"></select>
             </div>
-
             <div class="control-group" style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn warn" id="btnClearNonResidents">Vider les lits (sauf résidents)</button>
               <button class="btn primary" id="btnRandomAssign">Remplir au hasard</button>
@@ -199,11 +149,10 @@
         </details>
       </div>
 
-      <!-- Affichage + filtres -->
       <div class="control-group">
         <details id="displayPanel" class="collapsible">
           <summary> 🔎 Gestion de l'affichage <span class="hint">Masquer / Afficher</span></summary>
-          <div class="content">      
+          <div class="content">
             <div class="control-group">
               <label>Affichage</label>
               <div class="row">
@@ -240,7 +189,6 @@
 
       <hr style="border:none;height:1px;background:rgba(255,255,255,.12);margin:8px 0">
 
-      <!-- Ajouter une chambre (collapsible + password, auto-relock) -->
       <div class="control-group">
         <details id="addRoomPanel" class="collapsible">
           <summary>➕ Ajouter une chambre <span class="hint">Masquer / Afficher</span></summary>
@@ -275,7 +223,6 @@
 
       <hr style="border:none;height:1px;background:rgba(255,255,255,.12);margin:8px 0">
 
-      <!-- Imports repliables -->
       <div class="control-group">
         <details id="importsPanel" class="collapsible" open>
           <summary>📥 Imports (JSON) <span class="hint">Masquer / Afficher</span></summary>
@@ -311,107 +258,59 @@
       <h3>À l'hôtel <span id="hotelOverflowBadge" class="badge-pill">0</span></h3>
       <div id="hotelList" class="floors"></div>
     </aside>
-
   </section>
 </div>
 
 <script>
-// --- URLs distantes (RAW GitHub) ---
-
-const REMOTE_URLS = {
-  planning:    "https://raw.githubusercontent.com/Gascon-it/bdx-heb/refs/heads/main/planning_2025_2026.json",
-  apprentices: "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/apprentis.json",
-  residents:   "https://raw.githubusercontent.com/Gascon-it/bdx-heb/refs/heads/main/residents.json",
-};
-
-// Fonction fetch JSON robuste
-async function fetchJSON(url) {
-  try {
-    const response = await fetch(url, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error(`Erreur HTTP ${response.status} lors du chargement de ${url}`);
-    }
-
-    const data = await response.json();
-    return data;
-
-  } catch (error) {
-    console.error("Erreur lors du chargement du JSON :", error);
-    return null; // ou tu peux relancer l'erreur selon le contexte
-  }
-}
-
-
-// Boot distant : charge planning + apprentis + résidents depuis GitHub
-async function bootWithRemote(){
-  try{
-    const [planning, appr, resi] = await Promise.all([
-      fetchJSON(REMOTE_URLS.planning),
-      fetchJSON(REMOTE_URLS.apprentices),
-      fetchJSON(REMOTE_URLS.residents),
-    ]);
-
-    // 1) Planning
-    importPlanningJSON(planning);
-
-    // 2) Apprentis formation
-    importFormationJSON(appr);
-
-    // 3) Résidents annuels
-    importResidentsJSON(resi);
-
-    // Rendu + placement
-    renderAll();
-    randomAssign();
-
-    console.log("[REMOTE] Planning + Apprentis + Résidents chargés depuis GitHub.");
-  }catch(err){
-    console.error("[REMOTE] Échec du chargement distant:", err);
-
-    // Fallback sûr (mock data)
-    generateMockPeople();
-    generateMockPlanning();
-    renderAll();
-    randomAssign();
-
-    alert("Impossible de charger les données en ligne. Passage en mode démo (mock).");
-  }
-
-}
-
-
 (function(){
 
-  function computeHotelOverflowCount(){
-    const present = peoplePresentForWeek(state.selectedWeek);          // seulement ceux "présents" cette semaine
-    const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
-    // Apprentis = non-résidents (ou simplement pas resident_annuel), non placés
-    const traineesOverflow = present.filter(p => !p.resident_annuel && !idsInBeds.has(p.id));
-    return traineesOverflow.length;
+  /* ------------ URLs distantes + fallback ------------- */
+  const REMOTE_CANDIDATES = {
+    planning: [
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/refs/heads/main/planning_2025_2026.json",
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/planning_2025_2026.json"
+    ],
+    apprentices: [
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/refs/heads/main/apprentis.json",
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/apprentis.json"
+    ],
+    residents: [
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/refs/heads/main/residents.json",
+      "https://raw.githubusercontent.com/Gascon-it/bdx-heb/main/residents.json"
+    ]
+  };
+
+  async function fetchFirst(urls){
+    let lastErr;
+    for(const url of urls){
+      try{
+        const res = await fetch(url, {cache:"no-store", mode:"cors"});
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ct = (res.headers.get('content-type')||'').toLowerCase();
+        const text = await res.text();
+        const data = JSON.parse(text); // JSON strict (évite certains ct)
+        console.log("[REMOTE] OK", url, ct);
+        return data;
+      }catch(e){
+        console.warn("[REMOTE] échec", url, e);
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error("Aucune URL valide");
   }
 
-  function renderHotelOverflowBadge(){
-    const el = document.getElementById('hotelOverflowBadge');
-    if(!el) return;
-    el.textContent = computeHotelOverflowCount();
-  }
-
-  // =========================
-  // 0) Infrastructure & State
-  // =========================
+  /* --------- UI erreurs --------- */
   const errBox = document.getElementById('error');
-  window.addEventListener('error', (e)=>{
+  function showError(msg){
     errBox.style.display='block';
-    errBox.textContent = 'Erreur JS : ' + (e.message || e.error);
-    console.error(e);
-  });
+    errBox.textContent = msg;
+  }
 
-  const bedLetters=['A','B','C','D','E']; // max 5 lits / chambre
+  const bedLetters=['A','B','C','D','E'];
   const today=new Date();
   const shuffle=a=>a.sort(()=>Math.random()-.5);
+  const bedBadge=(room,bed)=>room.floorId+'-'+room.number+'-'+bed.label;
 
-  // Date utils robustes
   function parseDateSafe(v){
     if(!v) return null;
     if(v instanceof Date) return isNaN(v)? null : v;
@@ -426,13 +325,11 @@ async function bootWithRemote(){
     if(!dd) return null;
     return new Date(today.getTime() - dd.getTime()).getUTCFullYear() - 1970;
   }
-  function isMinor(d){ const a = age(d); return a===null ? false : a<18; }
-
-  const bedBadge=(room,bed)=>room.floorId+'-'+room.number+'-'+bed.label;
+  function isMinor(d){ const a=age(d); return a===null?false:a<18; }
 
   const state={
-    people:[],        // toutes personnes connues (vue cache)
-    formation:[],     // apprentis formation (rows normalisés)
+    people:[],
+    formation:[],
     planning:{weekKeys:[], rows:[]},
     building:{
       floors:[
@@ -445,31 +342,11 @@ async function bootWithRemote(){
     },
     hotelWaitlist:[],
     selectedWeek:null,
-    ui:{
-      addRoomUnlocked:false,
-      compact:false,
-      onlyFree:false,
-      onlyViolations:false,
-      floorsSelected:[]
-    },
-    dataSources:{
-      residents:[],
-      apprentices:[]
-    }
+    ui:{addRoomUnlocked:false,compact:false,onlyFree:false,onlyViolations:false,floorsSelected:[]},
+    dataSources:{residents:[], apprentices:[]}
   };
 
-  // Normalisation clés planning/groupes
-  function normalizeKey(s){
-    if(!s) return '';
-    let k = String(s).trim().toLowerCase();
-    k = k.replace(/-[a-f0-9]{6,}$/i, '');
-    k = k.replace(/[_\s]+/g,'-').replace(/-+/g,'-');
-    return k;
-  }
-
-  // ==========================
-  // 1) Génération / Bâtiment
-  // ==========================
+  /* ---------- Bâtiment ---------- */
   const makeRoom=(floorId,number,capacity)=>({
     id:floorId+'-'+number, floorId, number, capacity,
     beds:Array.from({length:capacity},(_,i)=>({label:bedLetters[i],personId:null}))
@@ -487,17 +364,15 @@ async function bootWithRemote(){
     }
   }
 
-  // ==========================
-  // 2) Règles & Placement
-  // ==========================
+  /* ---------- Règles & placement ---------- */
   function findPersonById(pid){
     return state.dataSources.residents.find(x=>x.id===pid)
         || state.dataSources.apprentices.find(x=>x.id===pid)
         || state.people.find(x=>x.id===pid)
         || state.formation.find(x=>x.id===pid);
   }
-  const roomHasAdult=(room)=>room.beds.some(b=>b.personId && !isMinor(findPersonById(b.personId)?.dob));
-  const roomHasMinor=(room)=>room.beds.some(b=>b.personId &&  isMinor(findPersonById(b.personId)?.dob));
+  const roomHasAdult=r=>r.beds.some(b=>b.personId && !isMinor(findPersonById(b.personId)?.dob));
+  const roomHasMinor=r=>r.beds.some(b=>b.personId &&  isMinor(findPersonById(b.personId)?.dob));
   function roomSex(room){
     let s=null;
     for(const b of room.beds){
@@ -527,120 +402,106 @@ async function bootWithRemote(){
     return null;
   }
 
-  // ==========================
-  // 3) Planning & Présence
-  // ==========================
-  let PLANNING_INDEX = new Map(); // groupCode -> Map(weekKey->0/1)
-
+  /* ---------- Planning & présence ---------- */
+  let PLANNING_INDEX = new Map();
   function buildPlanningIndex(){
     PLANNING_INDEX = new Map();
-    const rows = (state.planning && state.planning.rows) ? state.planning.rows : [];
+    const rows=(state.planning && state.planning.rows)||[];
     for(const row of rows){
-      const g = row.id || row.key || row.section || row.name;
-      const present = row.present || {};
-      const m = new Map();
-      for(const wk of state.planning.weekKeys){
-        m.set(wk, Number(present[wk] || 0));
-      }
-      PLANNING_INDEX.set(g, m);
+      const g=row.id||row.key||row.section||row.name;
+      const present=row.present||{};
+      const m=new Map();
+      for(const wk of state.planning.weekKeys){ m.set(wk, Number(present[wk]||0)); }
+      PLANNING_INDEX.set(g,m);
     }
   }
   function normalizeWeekKey(week){
     if(!state.planning || !state.planning.weekKeys) return null;
     if(state.planning.weekKeys.includes(week)) return week;
-    const tryKey = String(week||'').trim().toUpperCase();
-    if(state.planning.weekKeys.includes(tryKey)) return tryKey;
-    return state.planning.weekKeys[0] || null;
+    const t=String(week||'').trim().toUpperCase();
+    if(state.planning.weekKeys.includes(t)) return t;
+    return state.planning.weekKeys[0]||null;
   }
-  function isGroupPresentThisWeek(groupCode, wk){
+  function isGroupPresentThisWeek(groupCode,wk){
     if(!groupCode) return false;
-    const m = PLANNING_INDEX.get(groupCode);
+    const m=PLANNING_INDEX.get(groupCode);
     if(!m) return false;
-    return !!Number(m.get(wk) || 0);
+    return !!Number(m.get(wk)||0);
   }
-
   function peoplePresentForWeek(week){
-    const wk = normalizeWeekKey(week || state.selectedWeek);
+    const wk=normalizeWeekKey(week||state.selectedWeek);
     if(!wk) return [];
-    const residents = state.dataSources.residents.slice(); // tjs présents
-    const apprentices = state.dataSources.apprentices.filter(p => p.groupCode && isGroupPresentThisWeek(p.groupCode, wk));
-    return [...residents, ...apprentices];
+    const residents=state.dataSources.residents.slice();
+    const apprentices=state.dataSources.apprentices.filter(p=>p.groupCode && isGroupPresentThisWeek(p.groupCode,wk));
+    return [...residents,...apprentices];
   }
 
-  // ================
-  // 4) Anti-doublons
-  // ================
+  /* ---------- Anti-doublons ---------- */
   function getAllBeds(){
-    return state.building.floors.flatMap(f =>
-      f.rooms.flatMap(r => r.beds.map(b => ({ room: r, bed: b })))
-    );
+    return state.building.floors.flatMap(f=>f.rooms.flatMap(r=>r.beds.map(b=>({room:r,bed:b}))));
   }
   function enforceUniqueAssignments(){
-    const seen = new Set();
+    const seen=new Set();
     for(const {bed} of getAllBeds()){
-      const pid = bed.personId;
+      const pid=bed.personId;
       if(!pid) continue;
       if(seen.has(pid)){
-        bed.personId = null;
+        bed.personId=null;
         if(!state.hotelWaitlist.includes(pid)) state.hotelWaitlist.push(pid);
       } else seen.add(pid);
     }
   }
 
-  // ======================
-  // 5) UI utilitaires
-  // ======================
+  /* ---------- UI utilitaires ---------- */
   function autosizeBedsInRoom(roomCardEl){
-    let maxChip = 0;
+    let maxChip=0;
     roomCardEl.querySelectorAll('.bed .chip').forEach(chip=>{
       if(chip.classList.contains('empty')) return;
-      maxChip = Math.max(maxChip, chip.offsetHeight);
+      maxChip=Math.max(maxChip,chip.offsetHeight);
     });
-    const minH = Math.max(54, maxChip + 18);
-    roomCardEl.style.setProperty('--bed-min', minH + 'px');
+    const minH=Math.max(54,maxChip+18);
+    roomCardEl.style.setProperty('--bed-min',minH+'px');
   }
   function computeBedCounts(){
-    const per = state.building.floors.map(f=>{
-      const beds = f.rooms.reduce((a,r)=>a+r.capacity,0);
-      const occ  = f.rooms.reduce((a,r)=>a+r.beds.filter(b=>b.personId).length,0);
-      return { id:f.id, name:f.name, beds, occ };
+    const per=state.building.floors.map(f=>{
+      const beds=f.rooms.reduce((a,r)=>a+r.capacity,0);
+      const occ=f.rooms.reduce((a,r)=>a+r.beds.filter(b=>b.personId).length,0);
+      return {id:f.id,name:f.name,beds,occ};
     });
-    const totalBeds = per.reduce((a,x)=>a+x.beds,0);
-    const totalOcc  = per.reduce((a,x)=>a+x.occ,0);
-    return { totalBeds, totalOcc, per };
+    const totalBeds=per.reduce((a,x)=>a+x.beds,0);
+    const totalOcc=per.reduce((a,x)=>a+x.occ,0);
+    return {totalBeds,totalOcc,per};
   }
 
-  // ======================
-  // 6) RENDER
-  // ======================
+  /* ---------- Render ---------- */
   function renderDashboard(){
-    const present = peoplePresentForWeek(state.selectedWeek);
-    const girls = present.filter(p=>p.sexe==='F').length;
-    const boys = present.filter(p=>p.sexe==='M').length;
-    const minors = present.filter(p=>isMinor(p.dob)).length;
-    const adults = present.length - minors;
-    const resAnnual = present.filter(p=>p.resident_annuel).length;
-    const nonRes = present.length - resAnnual;
-    const totalBeds = state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.capacity,0),0);
-    const occupied = state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.beds.filter(b=>b.personId).length,0),0);
-    const occ = totalBeds? Math.round(occupied/totalBeds*100) : 0;
+    const present=peoplePresentForWeek(state.selectedWeek);
+    const girls=present.filter(p=>p.sexe==='F').length;
+    const boys=present.filter(p=>p.sexe==='M').length;
+    const minors=present.filter(p=>isMinor(p.dob)).length;
+    const adults=present.length-minors;
+    const resAnnual=present.filter(p=>p.resident_annuel).length;
+    const nonRes=present.length-resAnnual;
+    const totalBeds=state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.capacity,0),0);
+    const occupied=state.building.floors.reduce((a,f)=>a+f.rooms.reduce((x,r)=>x+r.beds.filter(b=>b.personId).length,0),0);
+    const occ=totalBeds?Math.round(occupied/totalBeds*100):0;
 
-    const counts = computeBedCounts();
-    document.getElementById('beds-occupied').textContent = counts.totalOcc;
-    document.getElementById('beds-total').textContent    = counts.totalBeds;
-    document.getElementById('beds-per-floor').innerHTML  = counts.per.map(f => `${f.name}: ${f.occ}/${f.beds}`).join(' · ');
+    const counts=computeBedCounts();
+    document.getElementById('beds-occupied').textContent=counts.totalOcc;
+    document.getElementById('beds-total').textContent=counts.totalBeds;
+    document.getElementById('beds-per-floor').innerHTML=counts.per.map(f=>`${f.name}: ${f.occ}/${f.beds}`).join(' · ');
 
-    document.getElementById('stat-occupancy').textContent = occ+'%';
-    document.getElementById('bar-occupancy').style.width = occ+'%';
+    document.getElementById('stat-occupancy').textContent=occ+'%';
+    document.getElementById('bar-occupancy').style.width=occ+'%';
     document.getElementById('stat-f').textContent=girls;
     document.getElementById('stat-m').textContent=boys;
-    document.getElementById('bar-fm').style.width = (present.length? Math.round(girls/present.length*100):0)+'%';
+    document.getElementById('bar-fm').style.width=(present.length?Math.round(girls/present.length*100):0)+'%';
     document.getElementById('stat-minor').textContent=minors;
     document.getElementById('stat-adult').textContent=adults;
-    document.getElementById('bar-age').style.width = (present.length? Math.round(minors/present.length*100):0)+'%';
+    document.getElementById('bar-age').style.width=(present.length?Math.round(minors/present.length*100):0)+'%';
     document.getElementById('stat-resident').textContent=resAnnual;
     document.getElementById('stat-nonresident').textContent=nonRes;
-    document.getElementById('bar-res').style.width = (present.length? Math.round(resAnnual/present.length*100):0)+'%';
+    document.getElementById('bar-res').style.width=(present.length?Math.round(resAnnual/present.length*100):0)+'%';
   }
 
   function roomViolations(room){
@@ -661,7 +522,7 @@ async function bootWithRemote(){
       if(p.sexe==='F' && !state.building.girlsFloors.has(room.floorId)){ v=true; reasons.push('Fille hors étage dédié'); break; }
       if(p.sexe==='M' &&  state.building.girlsFloors.has(room.floorId)){ v=true; reasons.push('Garçon sur étage filles'); break; }
     }
-    return {violation:v, reasons};
+    return {violation:v,reasons};
   }
 
   function personChip(p){
@@ -676,27 +537,26 @@ async function bootWithRemote(){
     return d;
   }
 
-  // Change capacity (global), respecte verrou
-  function changeRoomCapacity(roomId, newCap){
-    if(!state.ui.addRoomUnlocked){ return; }
+  function changeRoomCapacity(roomId,newCap){
+    if(!state.ui.addRoomUnlocked) return;
     const r = state.building.floors.flatMap(f=>f.rooms).find(rr=>rr.id===roomId);
     if(!r) return;
-    if(!Number.isInteger(newCap)) { alert('Capacité invalide.'); return; }
+    if(!Number.isInteger(newCap)){ alert('Capacité invalide.'); return; }
     const MIN=1, MAX=bedLetters.length;
-    const occupied = r.beds.filter(b=>b.personId).length;
-    if(newCap < Math.max(MIN, occupied)){ alert(`Impossible de descendre sous ${Math.max(MIN, occupied)} lit(s).`); return; }
-    if(newCap > MAX){ alert(`Capacité max ${MAX} lits.`); return; }
-    if(newCap === r.capacity) return;
+    const occupied=r.beds.filter(b=>b.personId).length;
+    if(newCap<Math.max(MIN,occupied)){ alert(`Impossible de descendre sous ${Math.max(MIN,occupied)} lit(s).`); return; }
+    if(newCap>MAX){ alert(`Capacité max ${MAX} lits.`); return; }
+    if(newCap===r.capacity) return;
 
-    if(newCap > r.capacity){
-      for(let i=r.capacity; i<newCap; i++) r.beds.push({label: bedLetters[i], personId: null});
-    } else {
-      for(let i=r.beds.length-1; i>=newCap; i--){
+    if(newCap>r.capacity){
+      for(let i=r.capacity;i<newCap;i++) r.beds.push({label:bedLetters[i],personId:null});
+    }else{
+      for(let i=r.beds.length-1;i>=newCap;i--){
         const b=r.beds[i]; if(b.personId){ alert('Un lit à supprimer est occupé.'); return; }
         r.beds.pop();
       }
     }
-    r.capacity = newCap;
+    r.capacity=newCap;
     renderAll();
   }
 
@@ -704,7 +564,7 @@ async function bootWithRemote(){
     const root=document.getElementById('floors'); root.innerHTML='';
 
     for(const floor of state.building.floors){
-      if (state.ui.floorsSelected.length && !state.ui.floorsSelected.includes(floor.id)) continue;
+      if(state.ui.floorsSelected.length && !state.ui.floorsSelected.includes(floor.id)) continue;
 
       const box=document.createElement('div'); box.className='floor';
       const h=document.createElement('div'); h.style.display='flex'; h.style.justifyContent='space-between'; h.style.alignItems='center';
@@ -713,26 +573,19 @@ async function bootWithRemote(){
 
       const rooms=document.createElement('div'); rooms.className='rooms';
 
-      const visibleRooms = floor.rooms.filter(room=>{
-        if(state.ui.onlyFree){
-          const hasFree = room.beds.some(b=>!b.personId);
-          if(!hasFree) return false;
-        }
-        if(state.ui.onlyViolations){
-          const v = roomViolations(room);
-          if(!v.violation) return false;
-        }
+      const visibleRooms=floor.rooms.filter(room=>{
+        if(state.ui.onlyFree && !room.beds.some(b=>!b.personId)) return false;
+        if(state.ui.onlyViolations && !roomViolations(room).violation) return false;
         return true;
       });
 
       for(const room of visibleRooms){
-        const card=document.createElement('div'); card.className='room'; card.dataset.capacity = room.capacity;
+        const card=document.createElement('div'); card.className='room'; card.dataset.capacity=room.capacity;
         const viol=roomViolations(room);
         if(viol.violation) card.classList.add('violation');
         card.title=viol.reasons.join(' • ');
-        if(room.beds.every(b => b.personId)){ card.classList.add('full'); }
+        if(room.beds.every(b=>b.personId)) card.classList.add('full');
 
-        // header + capacity editor
         const rhead=document.createElement('div');
         rhead.style.display='flex'; rhead.style.justifyContent='space-between'; rhead.style.alignItems='center';
         const left=document.createElement('div'); left.innerHTML='<strong>Ch. '+room.number+'</strong>';
@@ -745,25 +598,22 @@ async function bootWithRemote(){
         rhead.appendChild(left); rhead.appendChild(right);
 
         function syncButtons(){
-          const occupied = room.beds.filter(b=>b.personId).length;
-          const locked = !state.ui.addRoomUnlocked;
-          const disableMinus = Number(inp.value) <= Math.max(1, occupied);
-          const disablePlus  = Number(inp.value) >= bedLetters.length;
-          minus.disabled = locked || disableMinus;
-          plus.disabled  = locked || disablePlus;
-          inp.disabled   = locked;
+          const occupied=room.beds.filter(b=>b.personId).length;
+          const locked=!state.ui.addRoomUnlocked;
+          minus.disabled=locked || Number(inp.value)<=Math.max(1,occupied);
+          plus.disabled =locked || Number(inp.value)>=bedLetters.length;
+          inp.disabled  =locked;
         }
         minus.addEventListener('click', ()=>{
-          const newVal = Math.max(1, Number(inp.value)-1);
-          if(newVal !== Number(inp.value)){ inp.value = newVal; changeRoomCapacity(room.id, newVal); }
+          const nv=Math.max(1,Number(inp.value)-1);
+          if(nv!==Number(inp.value)){ inp.value=nv; changeRoomCapacity(room.id,nv); }
         });
         plus.addEventListener('click', ()=>{
-          const newVal = Math.min(bedLetters.length, Number(inp.value)+1);
-          if(newVal !== Number(inp.value)){ inp.value = newVal; changeRoomCapacity(room.id, newVal); }
+          const nv=Math.min(bedLetters.length,Number(inp.value)+1);
+          if(nv!==Number(inp.value)){ inp.value=nv; changeRoomCapacity(room.id,nv); }
         });
         inp.addEventListener('change', ()=>{
-          const val = parseInt(inp.value,10);
-          changeRoomCapacity(room.id, val);
+          const v=parseInt(inp.value,10); changeRoomCapacity(room.id,v);
         });
 
         const beds=document.createElement('div'); beds.className='beds';
@@ -776,16 +626,15 @@ async function bootWithRemote(){
             if(b.personId){ alert('Lit occupé'); return; }
             if(!person){ alert('Jeune introuvable'); return; }
             if(!canPlaceInRoom(person,room)){ alert('Placement interdit par les règles'); return; }
-            // retire la personne de son ancien lit
             for(const f of state.building.floors){ for(const r of f.rooms){ for(const bb of r.beds){ if(bb.personId===pid) bb.personId=null; } } }
             b.personId=pid; state.hotelWaitlist=state.hotelWaitlist.filter(x=>x!==pid); renderAll();
           });
           const lbl=document.createElement('div'); lbl.className='bed-label'; lbl.innerHTML='<span>Lit '+b.label+'</span><span class="badge">'+bedBadge(room,b)+'</span>';
           slot.appendChild(lbl);
           if(b.personId){
-            const pp = findPersonById(b.personId);
-            slot.appendChild(personChip(pp || {prenom:'?',nom:'?'}));
-          } else {
+            const pp=findPersonById(b.personId);
+            slot.appendChild(personChip(pp||{prenom:'?',nom:'?'}));
+          }else{
             const empty=document.createElement('div'); empty.className='chip empty'; empty.innerHTML='<div class="name">Libre</div><div class="meta">—</div>'; slot.appendChild(empty);
           }
           beds.appendChild(slot);
@@ -798,54 +647,64 @@ async function bootWithRemote(){
 
   function renderHotel(){
     const box=document.getElementById('hotelList'); box.innerHTML='';
-    const idsInBeds = new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
-    const present = peoplePresentForWeek(state.selectedWeek);
-    const notPlaced = present.filter(p => !idsInBeds.has(p.id));
+    const idsInBeds=new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+    const present=peoplePresentForWeek(state.selectedWeek);
+    const notPlaced=present.filter(p=>!idsInBeds.has(p.id));
 
     if(!notPlaced.length){ box.innerHTML='<div class="hint">Personne en attente.</div>'; return; }
 
-    const bySection = {};
+    const bySection={};
     notPlaced.forEach(p=>{
-      const key = p.section || 'Sans section';
-      (bySection[key] = bySection[key] || []).push(p);
+      const key=p.section||'Sans section';
+      (bySection[key]=bySection[key]||[]).push(p);
     });
 
-    for(const [section, people] of Object.entries(bySection)){
+    for(const [section,people] of Object.entries(bySection)){
       const card=document.createElement('div'); card.className='room hotel-card';
       const title=document.createElement('div'); title.className='title'; title.textContent=section;
       card.appendChild(title);
-      people.forEach(p => card.appendChild(personChip(p)));
+      people.forEach(p=>card.appendChild(personChip(p)));
       box.appendChild(card);
     }
   }
 
   function renderSelectors(){
-    // weeks
     const sel=document.getElementById('selectWeek'); sel.innerHTML='';
     for(const wk of state.planning.weekKeys){ const opt=document.createElement('option'); opt.value=wk; opt.textContent=wk; sel.appendChild(opt); }
     if(state.planning.weekKeys.length){
-      sel.value = state.selectedWeek || state.planning.weekKeys[0];
-      state.selectedWeek = sel.value;
+      sel.value=state.selectedWeek||state.planning.weekKeys[0];
+      state.selectedWeek=sel.value;
     }
 
-    // floors for girls
     const gf=document.getElementById('selectGirlsFloors'); gf.innerHTML='';
+    const addRoomFloor=document.getElementById('addRoomFloor'); addRoomFloor.innerHTML='';
     for(const f of state.building.floors){
       const opt=document.createElement('option'); opt.value=f.id; opt.textContent=f.name+' ('+f.id+')';
       if(state.building.girlsFloors.has(f.id)) opt.selected=true; gf.appendChild(opt);
-    }
 
-    // filtre étage (multi)
-    const floorsMulti = document.getElementById('filterFloorsMulti');
-    floorsMulti.innerHTML = '';
+      const opt2=opt.cloneNode(true); addRoomFloor.appendChild(opt2);
+    }
+    if(!addRoomFloor.value) addRoomFloor.value=state.building.floors[0]?.id||'E1';
+
+    const floorsMulti=document.getElementById('filterFloorsMulti');
+    floorsMulti.innerHTML='';
     for(const f of state.building.floors){
-      const opt=document.createElement('option'); opt.value=f.id; opt.textContent = f.name+' ('+f.id+')';
+      const opt=document.createElement('option'); opt.value=f.id; opt.textContent=f.name+' ('+f.id+')';
       if(!state.ui.floorsSelected.length || state.ui.floorsSelected.includes(f.id)) opt.selected=true;
       floorsMulti.appendChild(opt);
     }
     if(!state.ui.floorsSelected.length){
-      state.ui.floorsSelected = state.building.floors.map(f=>f.id);
+      state.ui.floorsSelected=state.building.floors.map(f=>f.id);
     }
+  }
+
+  function renderHotelOverflowBadge(){
+    const el=document.getElementById('hotelOverflowBadge');
+    if(!el) return;
+    const present=peoplePresentForWeek(state.selectedWeek);
+    const idsInBeds=new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+    const overflow=present.filter(p=>!p.resident_annuel && !idsInBeds.has(p.id)).length;
+    el.textContent=overflow;
   }
 
   function renderAll(){
@@ -854,216 +713,202 @@ async function bootWithRemote(){
     renderSelectors();
     renderFloors();
     renderHotel();
-    applyEditorsLock(); // synchronise le verrou sur ce qui vient d'être rendu
+    applyEditorsLock();
     renderHotelOverflowBadge();
-
   }
 
-  // ======================
-  // 7) Actions
-  // ======================
+  /* ---------- Actions ---------- */
   function randomAssign(){
     enforceUniqueAssignments();
-    const present = peoplePresentForWeek(state.selectedWeek);
-    const assignedIds = new Set(getAllBeds().map(x => x.bed.personId).filter(Boolean));
-    const toPlace = present.filter(p => !assignedIds.has(p.id)).sort(() => Math.random() - 0.5);
+    const present=peoplePresentForWeek(state.selectedWeek);
+    const assignedIds=new Set(getAllBeds().map(x=>x.bed.personId).filter(Boolean));
+    const toPlace=present.filter(p=>!assignedIds.has(p.id)).sort(()=>Math.random()-.5);
     for(const p of toPlace){
-      const res = placePersonInFirstFit(p);
-      if(!res && !state.hotelWaitlist.includes(p.id)){
-        state.hotelWaitlist.push(p.id);
-      }
+      const res=placePersonInFirstFit(p);
+      if(!res && !state.hotelWaitlist.includes(p.id)) state.hotelWaitlist.push(p.id);
     }
     renderAll();
   }
 
-  // Ajout de chambre
   function getFloorById(id){ return state.building.floors.find(f=>f.id===id); }
-  function roomExists(floor, number){ return floor.rooms.some(r=>r.number.toString()===number.toString()); }
+  function roomExists(floor,number){ return floor.rooms.some(r=>r.number.toString()===number.toString()); }
   function suggestNextRoomNumber(floorId){
-    const floor = getFloorById(floorId); if(!floor) return '';
-    const nums = floor.rooms.map(r=>r.number).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n,10)).sort((a,b)=>a-b);
+    const floor=getFloorById(floorId); if(!floor) return '';
+    const nums=floor.rooms.map(r=>r.number).filter(n=>/^\d+$/.test(n)).map(n=>parseInt(n,10)).sort((a,b)=>a-b);
     if(nums.length){
-      let candidate = nums[nums.length-1] + 1;
-      const width = (''+nums[nums.length-1]).length;
-      const formatted = String(candidate).padStart(width, '0');
-      if(!roomExists(floor, formatted)) return formatted;
+      let candidate=nums[nums.length-1]+1;
+      const width=(''+nums[nums.length-1]).length;
+      const formatted=String(candidate).padStart(width,'0');
+      if(!roomExists(floor,formatted)) return formatted;
     }
-    const d = floor.id.match(/^E(\d)$/);
+    const d=floor.id.match(/^E(\d)$/);
     if(d){
-      let base = (parseInt(d[1],10)*100)+1;
-      while(roomExists(floor, String(base))) base++;
+      let base=(parseInt(d[1],10)*100)+1;
+      while(roomExists(floor,String(base))) base++;
       return String(base);
     }
     let base=1;
-    while(roomExists(floor, String(base).padStart(3,'0'))) base++;
+    while(roomExists(floor,String(base).padStart(3,'0'))) base++;
     return String(base).padStart(3,'0');
   }
-  function addRoomToFloor(floorId, number, capacity){
-    if(!state.ui.addRoomUnlocked){ return; }
-    const floor = getFloorById(floorId);
+  function addRoomToFloor(floorId,number,capacity){
+    if(!state.ui.addRoomUnlocked) return;
+    const floor=getFloorById(floorId);
     if(!floor){ alert('Étage introuvable.'); return; }
-    const cap = parseInt(capacity,10);
+    const cap=parseInt(capacity,10);
     if(!Number.isInteger(cap) || cap<1 || cap>bedLetters.length){ alert(`Capacité entre 1 et ${bedLetters.length}.`); return; }
-    const numStr = (number||'').toString().trim();
+    const numStr=(number||'').toString().trim();
     if(!numStr){ alert('Numéro de chambre requis.'); return; }
-    if(roomExists(floor, numStr)){ alert('Ce numéro existe déjà sur cet étage.'); return; }
-    const room = makeRoom(floorId, numStr, cap);
+    if(roomExists(floor,numStr)){ alert('Ce numéro existe déjà sur cet étage.'); return; }
+    const room=makeRoom(floorId,numStr,cap);
     floor.rooms.push(room);
     floor.rooms.sort((a,b)=>{
       const na=parseInt(a.number,10), nb=parseInt(b.number,10);
-      if(!isNaN(na) && !isNaN(nb)) return na-nb;
-      return a.number.localeCompare(b.number, 'fr');
+      if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+      return a.number.localeCompare(b.number,'fr');
     });
     renderAll();
   }
 
-  // ======================
-  // 8) Imports (JSON) & normalisation
-  // ======================
+  /* ---------- Imports & normalisation ---------- */
+  function coerceArray(maybe){
+    if(Array.isArray(maybe)) return maybe;
+    if(maybe && typeof maybe==='object'){
+      for(const key of ['residents','resident','apprentis','apprentices','items','data','liste','list']){
+        if(Array.isArray(maybe[key])) return maybe[key];
+      }
+    }
+    return null;
+  }
+
   function ingestResidents(arrayLike){
-    state.dataSources.residents = (arrayLike || []).map(p => ({
+    const arr=coerceArray(arrayLike) || [];
+    state.dataSources.residents = arr.map(p=>({
       ...p,
       sexe: String(p.sexe||'M').toUpperCase()==='F'?'F':'M',
       resident_annuel: true,
-      type_presence: 'resident',
+      type_presence:'resident',
       dob: parseDateSafe(p.dob)
     }));
   }
   function ingestApprentices(arrayLike){
-    state.dataSources.apprentices = (arrayLike || []).map(p => ({
-      ...p,
-      sexe: String(p.sexe||'M').toUpperCase()==='F'?'F':'M',
-      dob: parseDateSafe(p.dob)
-    }));
+    const arr=coerceArray(arrayLike) || [];
+    state.dataSources.apprentices = arr.map(p=>{
+      const groupCode=p.groupCode||p.groupe||p.groupe_code||p.group||p.code||null;
+      return {
+        ...p,
+        groupCode,
+        sexe:String(p.sexe||'M').toUpperCase()==='F'?'F':'M',
+        resident_annuel:!!p.resident_annuel && p.type_presence==='resident',
+        dob:parseDateSafe(p.dob)
+      };
+    });
   }
   function rebuildPeopleCache(){
-    state.people = [...state.dataSources.residents, ...state.dataSources.apprentices];
+    state.people=[...state.dataSources.residents,...state.dataSources.apprentices];
   }
 
   function importPlanningJSON(obj){
-    if(!obj || !Array.isArray(obj.weekKeys) || !Array.isArray(obj.rows)){
-      alert('Planning JSON invalide'); return;
+    let weekKeys=[], rows=[];
+    if(obj && Array.isArray(obj.weekKeys) && Array.isArray(obj.rows)){
+      weekKeys=obj.weekKeys.slice();
+      rows=obj.rows.map(r=>({id:r.id||r.key||r.section||r.name, present:r.present||{}}));
+    }else if(Array.isArray(obj)){
+      const wkSet=new Set();
+      for(const r of obj){ Object.keys(r).forEach(k=>{ if(/^s\d+$/i.test(k)) wkSet.add(k.toUpperCase()); }); }
+      weekKeys=Array.from(wkSet).sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+      rows=obj.map(r=>{
+        const id=r.id||r.code||r.group||r.groupe||r.section||r.name;
+        const present={};
+        weekKeys.forEach(wk=>{ present[wk]=Number(r[wk]||r[wk.toLowerCase()]||0); });
+        return {id, present};
+      });
+    }else if(obj && typeof obj==='object' && obj.weeks && typeof obj.weeks==='object'){
+      weekKeys=Object.keys(obj.weeks).map(k=>k.toUpperCase()).sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+      const codes=new Set();
+      weekKeys.forEach(wk=>{ (obj.weeks[wk]||obj.weeks[wk.toLowerCase()]||[]).forEach(c=>codes.add(String(c))); });
+      rows=Array.from(codes).map(code=>{
+        const present={};
+        weekKeys.forEach(wk=>{
+          const arr=obj.weeks[wk]||obj.weeks[wk.toLowerCase()]||[];
+          present[wk]=arr.map(String).includes(String(code))?1:0;
+        });
+        return {id:code, present};
+      });
+    }else if(obj && typeof obj==='object'){
+      const groups=Object.keys(obj);
+      const wkSet=new Set();
+      groups.forEach(g=>{
+        const pr=obj[g]||{};
+        Object.keys(pr).forEach(k=>{ if(/^s\d+$/i.test(k)) wkSet.add(k.toUpperCase()); });
+      });
+      weekKeys=Array.from(wkSet).sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+      rows=groups.map(g=>{
+        const pr=obj[g]||{};
+        const present={};
+        weekKeys.forEach(wk=>{ present[wk]=Number(pr[wk]||pr[wk.toLowerCase()]||0); });
+        return {id:g,present};
+      });
     }
-    state.planning.weekKeys = obj.weekKeys.slice();
-    // accepte {id, present} ou {key/section/name, present}
-    state.planning.rows = obj.rows.map(r => ({
-      id: r.id || r.key || r.section || r.name,
-      present: r.present || {}
-    }));
-    state.selectedWeek = state.planning.weekKeys[0] || 'S1';
+    if(!weekKeys.length || !rows.length){ alert('Planning JSON: format non reconnu'); return; }
+    state.planning.weekKeys=weekKeys;
+    state.planning.rows=rows;
+    state.selectedWeek=state.planning.weekKeys[0]||'S1';
     buildPlanningIndex();
     renderAll();
   }
-  function importResidentsJSON(arr){
-    if(!Array.isArray(arr)){ alert('Résidents JSON invalide'); return; }
-    ingestResidents(arr);
+
+  function importResidentsJSON(arrLike){
+    ingestResidents(arrLike);
     rebuildPeopleCache();
-    // on nettoie les lits avec ids obsolètes
-    const allIds = new Set(state.people.map(p=>p.id));
+    const allIds=new Set(state.people.map(p=>p.id));
     getAllBeds().forEach(({bed})=>{ if(bed.personId && !allIds.has(bed.personId)) bed.personId=null; });
     renderAll();
   }
-  function importFormationJSON(arr){
-    if(!Array.isArray(arr)){ alert('Formation JSON invalide'); return; }
-    ingestApprentices(arr);
+  function importFormationJSON(arrLike){
+    ingestApprentices(arrLike);
     rebuildPeopleCache();
-    const allIds = new Set(state.people.map(p=>p.id));
+    const allIds=new Set(state.people.map(p=>p.id));
     getAllBeds().forEach(({bed})=>{ if(bed.personId && !allIds.has(bed.personId)) bed.personId=null; });
     renderAll();
   }
 
-  // ======================
-  // 9) Mock data (réinit)
-  // ======================
-  function generateMockPeople(){
-    const last=["Martin","Bernard","Dubois","Thomas","Robert","Richard","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Bertrand","Roux","Vincent","Fournier","Morel","Girard","Andre","Lefevre","Mercier","Dupont","Lambert","Bonnet","Francois","Martinez"];
-    const fNames=["Chloé","Emma","Zoé","Léa","Manon","Camille","Sarah","Inès","Clara","Lola","Eva","Jade","Lou","Alice","Anna","Elsa","Maeva","Nina","Océane","Romane"];
-    const mNames=["Lucas","Noah","Tom","Léo","Hugo","Nathan","Ethan","Enzo","Louis","Gabriel","Arthur","Raphaël","Jules","Antoine","Théo","Adam","Maxime","Paul","Axel","Yanis"];
-    const sections=["Boulangerie","Menuiserie","Cuisine","Ébénisterie"];
-    function rdate(a,b){const da=new Date(a,0,1), db=new Date(b,11,31);const d=new Date(da.getTime()+Math.random()*(db-da));return d.toISOString().slice(0,10)}
-    const residents=[], apprentices=[];
-    for(let i=0;i<20;i++){
-      const sexe=i%2===0?'F':'M';
-      const prenom=sexe==='F'?fNames[i%fNames.length]:mNames[i%mNames.length];
-      const nom=last[(i*3)%last.length];
-      const dob=(i%4===0 || i%4===1)? rdate(2008,2010): rdate(2003,2006);
-      const section=sections[i%sections.length];
-      residents.push({id:'R'+(Date.now()+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'resident', resident_annuel:true, metier:section});
-    }
-    for(let i=0;i<20;i++){
-      const sexe=i%2===1?'F':'M';
-      const prenom=sexe==='F'?fNames[(i+5)%fNames.length]:mNames[(i+7)%mNames.length];
-      const nom=last[(i*5)%last.length];
-      const dob=rdate(2006,2009);
-      const section=sections[i%sections.length];
-      const groupCode = section.toLowerCase()+'-g'+((i%3)+1);
-      apprentices.push({id:'A'+(Date.now()+100+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'non-resident', resident_annuel:false, metier:section, groupCode});
-    }
-    ingestResidents(residents);
-    ingestApprentices(apprentices);
-    rebuildPeopleCache();
-  }
-  function generateMockPlanning(){
-    state.planning.weekKeys = Array.from({length:10}, (_,i)=>'S'+(i+1));
-    const rows = [];
-    const codes = Array.from(new Set(state.dataSources.apprentices.map(a=>a.groupCode))).slice(0,6);
-    for(const code of codes){
-      const present={};
-      state.planning.weekKeys.forEach((wk,idx)=>{ present[wk] = (idx%2===0)?1:0; });
-      rows.push({ id: code, present });
-    }
-    state.planning.rows = rows;
-    state.selectedWeek = state.planning.weekKeys[0];
-    buildPlanningIndex();
-  }
-
-  // ======================
-  // 10) Lock Add-Room + éditeurs
-  // ======================
-  const ADDROOM_KEY = "Bordeaux";
-  const addRoomForm   = document.getElementById('addRoomForm');
-  const addRoomLock   = document.getElementById('addRoomLock');
-  const addRoomPwd    = document.getElementById('addRoomPwd');
-  const btnUnlock     = document.getElementById('btnAddRoomUnlock');
-  const addRoomPanel  = document.getElementById('addRoomPanel');
+  /* ---------- Lock Add-Room ---------- */
+  const ADDROOM_KEY="Bordeaux";
+  const addRoomForm=document.getElementById('addRoomForm');
+  const addRoomLock=document.getElementById('addRoomLock');
+  const addRoomPwd=document.getElementById('addRoomPwd');
+  const btnUnlock=document.getElementById('btnAddRoomUnlock');
+  const addRoomPanel=document.getElementById('addRoomPanel');
 
   function applyEditorsLock(){
-    const locked = !state.ui.addRoomUnlocked;
+    const locked=!state.ui.addRoomUnlocked;
     document.querySelectorAll('.cap-btn, .cap-input').forEach(el=>{
-      if(locked) el.setAttribute('disabled','disabled');
-      else el.removeAttribute('disabled');
+      if(locked) el.setAttribute('disabled','disabled'); else el.removeAttribute('disabled');
     });
   }
   function setAddRoomUnlocked(on){
-    state.ui.addRoomUnlocked = !!on;
+    state.ui.addRoomUnlocked=!!on;
     if(state.ui.addRoomUnlocked){
       addRoomForm?.removeAttribute('aria-disabled');
-      if(addRoomLock) addRoomLock.style.display = 'none';
+      if(addRoomLock) addRoomLock.style.display='none';
     }else{
       addRoomForm?.setAttribute('aria-disabled','true');
-      if(addRoomLock) addRoomLock.style.display = '';
-      if(addRoomPwd){ addRoomPwd.value = ""; }
+      if(addRoomLock) addRoomLock.style.display='';
+      if(addRoomPwd) addRoomPwd.value="";
     }
     applyEditorsLock();
   }
   btnUnlock?.addEventListener('click', ()=>{
-    const pwd = (addRoomPwd?.value || '').trim();
-    if(pwd === ADDROOM_KEY){
-      setAddRoomUnlocked(true);
-    }else{
-      alert('Mot de passe incorrect');
-      addRoomPwd?.focus(); addRoomPwd?.select();
-    }
+    const pwd=(addRoomPwd?.value||'').trim();
+    if(pwd===ADDROOM_KEY) setAddRoomUnlocked(true);
+    else{ alert('Mot de passe incorrect'); addRoomPwd?.focus(); addRoomPwd?.select(); }
   });
   addRoomPanel?.addEventListener('toggle', ()=>{
-    if(!addRoomPanel.open){
-      setAddRoomUnlocked(false); // auto-relock
-    }
+    if(!addRoomPanel.open) setAddRoomUnlocked(false);
   });
 
-  // ======================
-  // 11) Bind UI
-  // ======================
+  /* ---------- Bind UI ---------- */
   function bind(){
     document.getElementById('btnReinit').addEventListener('click', ()=>{
       bootstrapRooms(); generateMockPeople(); generateMockPlanning();
@@ -1071,13 +916,12 @@ async function bootWithRemote(){
     });
 
     document.getElementById('selectWeek').addEventListener('change', e=>{
-      state.selectedWeek = e.target.value; renderAll();
+      state.selectedWeek=e.target.value; renderAll();
     });
 
     document.getElementById('selectGirlsFloors').addEventListener('change', e=>{
-      const vals = Array.from(e.target.selectedOptions).map(o=>o.value);
-      state.building.girlsFloors = new Set(vals);
-      renderAll();
+      const vals=Array.from(e.target.selectedOptions).map(o=>o.value);
+      state.building.girlsFloors=new Set(vals); renderAll();
     });
 
     document.getElementById('btnClearNonResidents').addEventListener('click', ()=>{
@@ -1085,7 +929,7 @@ async function bootWithRemote(){
         for(const r of f.rooms){
           for(const b of r.beds){
             if(!b.personId) continue;
-            const p = findPersonById(b.personId);
+            const p=findPersonById(b.personId);
             if(p && !p.resident_annuel) b.personId=null;
           }
         }
@@ -1098,7 +942,7 @@ async function bootWithRemote(){
         for(const r of f.rooms){
           for(const b of r.beds){
             if(!b.personId) continue;
-            const p = findPersonById(b.personId);
+            const p=findPersonById(b.personId);
             if(p && p.resident_annuel) b.personId=null;
           }
         }
@@ -1108,92 +952,151 @@ async function bootWithRemote(){
 
     document.getElementById('btnRandomAssign').addEventListener('click', randomAssign);
 
-    // Ajout de chambre actions
-    const floorSel = document.getElementById('addRoomFloor');
-    const numInput = document.getElementById('addRoomNumber');
-    const capInput = document.getElementById('addRoomCapacity');
+    const floorSel=document.getElementById('addRoomFloor');
+    const numInput=document.getElementById('addRoomNumber');
+    const capInput=document.getElementById('addRoomCapacity');
     document.getElementById('btnSuggestRoomNumber').addEventListener('click', ()=>{
-      const f = floorSel.value; if(!f) return;
-      numInput.value = suggestNextRoomNumber(f);
+      const f=floorSel.value; if(!f) return; numInput.value=suggestNextRoomNumber(f);
     });
     document.getElementById('btnAddRoom').addEventListener('click', ()=>{
       addRoomToFloor(floorSel.value, numInput.value, capInput.value);
-      numInput.value = suggestNextRoomNumber(floorSel.value);
+      numInput.value=suggestNextRoomNumber(floorSel.value);
     });
 
-    // Affichage / filtres
-    const toggleCompact = document.getElementById('toggleCompact');
-    const toggleOnlyFree = document.getElementById('toggleOnlyFree');
-    const toggleOnlyViol = document.getElementById('toggleOnlyViolations');
+    const toggleCompact=document.getElementById('toggleCompact');
+    const toggleOnlyFree=document.getElementById('toggleOnlyFree');
+    const toggleOnlyViol=document.getElementById('toggleOnlyViolations');
 
-    toggleCompact.checked = !!state.ui.compact;
-    document.body.setAttribute('data-compact', toggleCompact.checked ? '1' : '0');
+    toggleCompact.checked=!!state.ui.compact;
+    document.body.setAttribute('data-compact', toggleCompact.checked?'1':'0');
     toggleCompact.addEventListener('change', ()=>{
-      state.ui.compact = toggleCompact.checked;
-      document.body.setAttribute('data-compact', state.ui.compact ? '1' : '0');
+      state.ui.compact=toggleCompact.checked;
+      document.body.setAttribute('data-compact', state.ui.compact?'1':'0');
     });
-    toggleOnlyFree.checked = !!state.ui.onlyFree;
-    toggleOnlyFree.addEventListener('change', ()=>{ state.ui.onlyFree = toggleOnlyFree.checked; renderAll(); });
-    toggleOnlyViol.checked = !!state.ui.onlyViolations;
-    toggleOnlyViol.addEventListener('change', ()=>{ state.ui.onlyViolations = toggleOnlyViol.checked; renderAll(); });
+    toggleOnlyFree.checked=!!state.ui.onlyFree;
+    toggleOnlyFree.addEventListener('change', ()=>{ state.ui.onlyFree=toggleOnlyFree.checked; renderAll(); });
+    toggleOnlyViol.checked=!!state.ui.onlyViolations;
+    toggleOnlyViol.addEventListener('change', ()=>{ state.ui.onlyViolations=toggleOnlyViol.checked; renderAll(); });
 
-    const floorsMulti = document.getElementById('filterFloorsMulti');
-    const btnFloorsAll = document.getElementById('btnFloorsAll');
-    const btnFloorsNone = document.getElementById('btnFloorsNone');
+    const floorsMulti=document.getElementById('filterFloorsMulti');
+    const btnFloorsAll=document.getElementById('btnFloorsAll');
+    const btnFloorsNone=document.getElementById('btnFloorsNone');
 
     floorsMulti.addEventListener('change', ()=>{
-      state.ui.floorsSelected = Array.from(floorsMulti.selectedOptions).map(o=>o.value);
+      state.ui.floorsSelected=Array.from(floorsMulti.selectedOptions).map(o=>o.value);
       renderAll();
     });
     btnFloorsAll.addEventListener('click', ()=>{
-      state.ui.floorsSelected = state.building.floors.map(f=>f.id);
-      for(const opt of floorsMulti.options) opt.selected = true;
+      state.ui.floorsSelected=state.building.floors.map(f=>f.id);
+      for(const opt of floorsMulti.options) opt.selected=true;
       renderAll();
     });
     btnFloorsNone.addEventListener('click', ()=>{
-      state.ui.floorsSelected = [];
-      for(const opt of floorsMulti.options) opt.selected = false;
+      state.ui.floorsSelected=[];
+      for(const opt of floorsMulti.options) opt.selected=false;
       renderAll();
     });
 
-    // Imports
+    // Imports manuels
     document.getElementById('btnImportPlanning').addEventListener('click', ()=>{
-      const f = document.getElementById('filePlanning').files[0];
+      const f=document.getElementById('filePlanning').files[0];
       if(!f) return alert('Choisissez un fichier Planning JSON');
-      const reader = new FileReader();
-      reader.onload = () => { try { const obj = JSON.parse(reader.result); importPlanningJSON(obj); } catch(e){ alert('JSON invalide (planning)'); } };
+      const reader=new FileReader();
+      reader.onload=()=>{ try{ const obj=JSON.parse(reader.result); importPlanningJSON(obj); }catch(e){ alert('JSON invalide (planning)'); } };
       reader.readAsText(f);
     });
-
     document.getElementById('btnImportResidents').addEventListener('click', ()=>{
-      const f = document.getElementById('fileResidents').files[0];
+      const f=document.getElementById('fileResidents').files[0];
       if(!f) return alert('Choisissez un fichier Résidents JSON');
-      const reader = new FileReader();
-      reader.onload = () => { try { const arr = JSON.parse(reader.result); importResidentsJSON(arr); } catch(e){ alert('JSON invalide (résidents)'); } };
+      const reader=new FileReader();
+      reader.onload=()=>{ try{ const arr=JSON.parse(reader.result); importResidentsJSON(arr); }catch(e){ alert('JSON invalide (résidents)'); } };
       reader.readAsText(f);
     });
-
     document.getElementById('btnImportFormation').addEventListener('click', ()=>{
-      const f = document.getElementById('fileFormation').files[0];
+      const f=document.getElementById('fileFormation').files[0];
       if(!f) return alert('Choisissez un fichier Formation JSON');
-      const reader = new FileReader();
-      reader.onload = () => { try { const arr = JSON.parse(reader.result); importFormationJSON(arr); } catch(e){ alert('JSON invalide (formation)'); } };
+      const reader=new FileReader();
+      reader.onload=()=>{ try{ const arr=JSON.parse(reader.result); importFormationJSON(arr); }catch(e){ alert('JSON invalide (formation)'); } };
       reader.readAsText(f);
     });
   }
 
-  // ======================
-  // 12) Auto-start
-  // ======================
-  bootstrapRooms();
-  bind();
+  /* ---------- Mock fallback ---------- */
+  function generateMockPeople(){
+    const last=["Martin","Bernard","Dubois","Thomas","Robert","Richard","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Michel","Garcia","David","Bertrand","Roux","Vincent","Fournier","Morel","Girard","Andre","Lefevre","Mercier","Dupont","Lambert","Bonnet","Francois","Martinez"];
+    const fNames=["Chloé","Emma","Zoé","Léa","Manon","Camille","Sarah","Inès","Clara","Lola","Eva","Jade","Lou","Alice","Anna","Elsa","Maeva","Nina","Océane","Romane"];
+    const mNames=["Lucas","Noah","Tom","Léo","Hugo","Nathan","Ethan","Enzo","Louis","Gabriel","Arthur","Raphaël","Jules","Antoine","Théo","Adam","Maxime","Paul","Axel","Yanis"];
+    const sections=["Boulangerie","Menuiserie","Cuisine","Ébénisterie"];
+    function rdate(a,b){const da=new Date(a,0,1), db=new Date(b,11,31);const d=new Date(da.getTime()+Math.random()*(db-da));return d.toISOString().slice(0,10)}
+    const residents=[], apprentices=[];
+    for(let i=0;i<20;i++){
+      const sexe=i%2===0?'F':'M';
+      const prenom=sexe==='F'?fNames[i%fNames.length]:mNames[i%mNames.length];
+      const nom=last[(i*3)%last.length];
+      const dob=(i%4===0||i%4===1)?rdate(2008,2010):rdate(2003,2006);
+      const section=sections[i%sections.length];
+      residents.push({id:'R'+(Date.now()+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'resident', resident_annuel:true, metier:section});
+    }
+    for(let i=0;i<20;i++){
+      const sexe=i%2===1?'F':'M';
+      const prenom=sexe==='F'?fNames[(i+5)%fNames.length]:mNames[(i+7)%mNames.length];
+      const nom=last[(i*5)%last.length];
+      const dob=rdate(2006,2009);
+      const section=sections[i%sections.length];
+      const groupCode=section.toLowerCase()+'-g'+((i%3)+1);
+      apprentices.push({id:'A'+(Date.now()+100+i), nom, prenom, dob, sexe, section, statut:'Apprenti', type_presence:'non-resident', resident_annuel:false, metier:section, groupCode});
+    }
+    ingestResidents(residents);
+    ingestApprentices(apprentices);
+    rebuildPeopleCache();
+  }
+  function generateMockPlanning(){
+    state.planning.weekKeys=Array.from({length:10},(_,i)=>'S'+(i+1));
+    const rows=[];
+    const codes=Array.from(new Set(state.dataSources.apprentices.map(a=>a.groupCode))).slice(0,6);
+    for(const code of codes){
+      const present={};
+      state.planning.weekKeys.forEach((wk,idx)=>{ present[wk]=(idx%2===0)?1:0; });
+      rows.push({id:code,present});
+    }
+    state.planning.rows=rows;
+    state.selectedWeek=state.planning.weekKeys[0];
+    buildPlanningIndex();
+  }
+
+  /* ---------- Boot distant ---------- */
+  async function bootWithRemote(){
+    try{
+      bootstrapRooms();
+      bind();
+
+      const [planning, appr, resi] = await Promise.all([
+        fetchFirst(REMOTE_CANDIDATES.planning),
+        fetchFirst(REMOTE_CANDIDATES.apprentices),
+        fetchFirst(REMOTE_CANDIDATES.residents)
+      ]);
+
+      importPlanningJSON(planning);
+      importFormationJSON(appr);
+      importResidentsJSON(resi);
+
+      renderAll();
+      randomAssign();
+      console.log("[REMOTE] Données chargées (planning/apprentis/résidents).");
+    }catch(err){
+      console.error("[REMOTE] échec de chargement:", err);
+      showError("Impossible de charger les données en ligne. Mode démo activé.");
+      bootstrapRooms(); bind(); generateMockPeople(); generateMockPlanning(); renderAll(); randomAssign();
+    }
+  }
+
+  /* Lancement */
   bootWithRemote();
 
-  // Expose debug si besoin
-  window._state = state;
+  /* Debug global */
+  window._state=state;
 
 })();
 </script>
 </body>
 </html>
-

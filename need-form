@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard – Simulation Formateurs (N+1 & Adoption N-4)</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Styles personnalisés (sans @apply) */
+    .card {
+      border-radius: 1rem;
+      border: 1px solid rgba(100,116,139,.6);
+      background: rgba(255,255,255,.85);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+      backdrop-filter: blur(2px);
+      padding: 1rem;
+    }
+    @media (min-width: 768px) { .card { padding: 1.5rem; } }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: .5rem;
+      border-radius: 999px; padding: .25rem .75rem;
+      font-size: .75rem; font-weight: 500;
+      border: 1px solid rgba(203,213,225,.6);
+      background: rgba(248,250,252,.6);
+    }
+
+    .input {
+      width: 100%;
+      border-radius: .75rem;
+      border: 1px solid rgba(203,213,225,.6);
+      background: white;
+      padding: .5rem .75rem; font-size: .875rem;
+      outline: none;
+    }
+    .input:focus { box-shadow: 0 0 0 .25rem rgba(100,116,139,.25); }
+
+    .btn {
+      font-size: .875rem; padding: .375rem .75rem;
+      border-radius: .75rem; border: 1px solid rgba(203,213,225,.6);
+      background: white; transition: transform .05s ease;
+    }
+    .btn:hover { background: #f8fafc; }
+    .btn:active { transform: scale(.98); }
+    .btn-primary {
+      background: #0f172a; color: white; border-color: #0f172a;
+    }
+    .btn-primary:hover { background: #111827; }
+
+    /* Correctif chevauchement Années / Permanent + clic fiable */
+    .trainer-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+    .trainer-row .name  { flex: 1 1 220px; min-width: 180px; }
+    .trainer-row .years { flex: 0 0 96px; }
+    .trainer-row .perm  { flex: 0 0 auto; white-space: nowrap; cursor: pointer; }
+    .trainer-row .perm input { pointer-events: auto; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <!-- Header -->
+    <header class="mb-8 md:mb-12">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+            Dashboard – Simulation Formateurs
+          </h1>
+          <p class="mt-2 text-sm md:text-base opacity-80" id="subtitle"></p>
+        </div>
+        <div class="hidden sm:flex items-center gap-2">
+          <span class="pill" id="pillN"></span>
+          <span class="pill" id="pillH"></span>
+        </div>
+      </div>
+      <footer>
+        <p>© 2025 Nicolas DEFORGES. Tous droits réservés.</p>
+      </footer>
+    </header>
+
+    <!-- Paramètres -->
+    <section class="card mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Paramètres</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div>
+          <label class="text-xs uppercase tracking-wide opacity-70">Année N (aujourd'hui)</label>
+          <input id="inpN" type="number" class="input" />
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-wide opacity-70">Horizon (années)</label>
+          <input id="inpH" type="number" min="1" max="25" class="input" />
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-wide opacity-70">Durée mission par défaut (ans)</label>
+          <input id="inpTenure" type="number" min="1" class="input" />
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-wide opacity-70">Facteur Adoption</label>
+          <input id="inpAdoptK" type="number" min="1" class="input" />
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-wide opacity-70">Cap / an (par métier)</label>
+          <input id="inpCap" type="number" min="0" class="input" />
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <button id="btnAddMetier" class="btn btn-primary">+ Ajouter un métier</button>
+        <button id="btnExport" class="btn">⤓ Export CSV (résumé)</button>
+      </div>
+    </section>
+
+    <!-- Récap par année -->
+    <section class="card mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight">
+        Récapitulatif – Besoins d'embauche par rentrée (N+1 → N+<span id="spanH"></span>)
+      </h2>
+      <div class="overflow-auto mt-4">
+        <table class="w-full text-sm min-w-[720px]" id="recapTable"></table>
+      </div>
+    </section>
+
+    <!-- Métiers (édition + aperçu) -->
+    <section id="metiersGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-6"></section>
+
+    <!-- Besoin par ville & année -->
+    <section class="mt-8">
+      <div class="card">
+        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Besoin par ville & année (par métier)</h2>
+        <p class="mt-2 text-sm opacity-80">Tableaux par métier : colonnes = villes (sites), lignes = rentrées (N+1 → N+H).</p>
+        <div id="cityYearHost" class="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- Graph -->
+    <div class="mt-8 card">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight">
+        Vision globale – Total formateurs nécessaires (rentrées) & Adoption (N-4)
+      </h2>
+      <p class="mt-2 text-sm opacity-80" id="chartLegend"></p>
+      <div class="mt-4" id="chartHost"></div>
+    </div>
+
+    <div class="opacity-60 text-xs mt-8">
+      © Simulation locale – aucune donnée transmise. HTML+JS autonome (Tailwind CDN).
+    </div>
+  </div>
+
+  <script>
+    // ---------------------- Données initiales ----------------------
+    const THIS_YEAR = new Date().getFullYear();
+    const state = {
+      N: THIS_YEAR,
+      H: 10,
+      tenureDefault: 3,
+      adoptionK: 4,
+      capPerYearPerMetier: 4, // cap appliqué à chaque métier, par année
+      metiers: [
+        {
+          id: "metier-electro",
+          name: "Electrotechniciens",
+          tenure: 3,
+          sites: [
+            { id: "bdx", name: "Bordeaux", trainers: [
+              { id: "t-nd",  name: "Nicolas_D", years: 11, permanent: true  },
+              { id: "t-nc",  name: "Nicolas_C", years: 3,  permanent: false },
+              { id: "t-irn", name: "Ironne",     years: 1,  permanent: false },
+            ]},
+            { id: "lil", name: "Lille", trainers: [
+              { id: "t-dav", name: "David",   years: 3, permanent: false },
+              { id: "t-mar", name: "Marceau", years: 1, permanent: false },
+            ]},
+            { id: "tou", name: "Tours", trainers: [
+              { id: "t-ll", name: "Lucas_L", years: 1, permanent: false },
+            ]},
+            { id: "try", name: "Troyes", trainers: [
+              { id: "t-lp",  name: "Lucas_P", years: 1, permanent: false },
+              { id: "t-rap", name: "Raphael", years: 2, permanent: false },
+              { id: "t-rom", name: "Romain",  years: 1, permanent: false },
+            ]},
+            { id: "msl", name: "Marseille", trainers: [
+              { id: "t-xav", name: "Xavier",  years: 2, permanent: false },
+              { id: "t-max", name: "Maxence", years: 1, permanent: false },
+            ]},
+          ]
+        },
+        {
+          id: "metier-meca-cfa",
+          name: "Mécaniciens CFA",
+          tenure: 3,
+          sites: [
+            { id: "alb",  name: "Albi",   trainers: [] },
+            { id: "ang",  name: "Angers", trainers: [] },
+            { id: "tou2", name: "Tours",  trainers: [] },
+            { id: "mui",  name: "Muizon", trainers: [] },
+          ]
+        },
+        {
+          id: "metier-meca-out",
+          name: "Mécaniciens outilleurs CFA",
+          tenure: 3,
+          sites: [
+            { id: "col", name: "Colomiers",  trainers: [] },
+            { id: "ste", name: "St Etienne", trainers: [] },
+          ]
+        }
+      ]
+    };
+
+    // ---------------------- Utils ----------------------
+    const clone = (o) => JSON.parse(JSON.stringify(o));
+
+    // util DOM – pose les PROPRIÉTÉS pour les champs (checked/value/disabled) pour fiabilité checkbox
+    const h = (tag, attrs = {}, ...children) => {
+      const el = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs || {})) {
+        if (k === "class" || k === "className") el.className = v;
+        else if (k === "style" && typeof v === "string") el.setAttribute("style", v);
+        else if (k === "checked") el.checked = !!v;       // important pour checkbox
+        else if (k === "value") el.value = v;
+        else if (k === "disabled") el.disabled = !!v;
+        else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2).toLowerCase(), v);
+        else el.setAttribute(k, v); // id, type, for, min...
+      }
+      for (const c of children) {
+        if (c == null) continue;
+        if (c.nodeType) el.appendChild(c);
+        else el.appendChild(document.createTextNode(String(c)));
+      }
+      return el;
+    };
+
+    function downloadCSV(filename, rows) {
+      const csv = rows.map(r => r.map(cell => {
+        if (cell == null) return "";
+        const s = String(cell).replaceAll('"','""');
+        return (s.includes(",") || s.includes("\n")) ? `"${s}"` : s;
+      }).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // ---------------------- Simulation (site + total) ----------------------
+    // Retourne:
+    //  - hireByRentree: Map(année -> total métier)
+    //  - hireByRentreeBySite: Map(siteName -> Map(année -> embauches))
+    //  - adoption: Map(année(N-4)-> 4×total)
+    function simulateMetier(metier, N, H, adoptionK = 4) {
+      const tenure = Number(metier.tenure || state.tenureDefault || 3);
+      const world = clone(metier.sites);
+      const hiresRecordedTotal = new Map();          // y -> total
+      const hiresRecordedBySite = new Map();         // site.id -> Map(y -> count)
+
+      for (const site of world) hiresRecordedBySite.set(site.id, new Map());
+
+      for (let y = N; y <= N + H; y++) {
+        let yearTotal = 0;
+        for (const site of world) {
+          const kept = []; let vacancies = 0;
+          for (const t of site.trainers) {
+            if (t.permanent) {
+              kept.push({ ...t, years: (t.years || 0) + 1 });
+            } else {
+              const ny = (t.years || 0) + 1;
+              if (ny >= tenure) vacancies += 1;
+              else kept.push({ ...t, years: ny });
+            }
+          }
+          // remplir par embauche externe pour l'année suivante
+          if (vacancies > 0) {
+            const m = hiresRecordedBySite.get(site.id);
+            m.set(y, (m.get(y) || 0) + vacancies);
+            for (let i = 0; i < vacancies; i++) {
+              kept.push({ id: `${site.id}-new-${y}-${i+1}`, name: `New_${y+1}`, years: 0, permanent: false });
+            }
+            yearTotal += vacancies;
+          }
+          site.trainers = kept;
+        }
+        hiresRecordedTotal.set(y, yearTotal);
+      }
+
+      // conversion en rentrées
+      const hireByRentree = new Map();
+      const hireByRentreeBySite = new Map(); // siteName -> Map(rentree -> count)
+
+      for (const site of metier.sites) hireByRentreeBySite.set(site.name, new Map());
+
+      for (let rentree = N + 1; rentree <= N + H; rentree++) {
+        hireByRentree.set(rentree, hiresRecordedTotal.get(rentree - 1) || 0);
+        for (const site of metier.sites) {
+          const src = hiresRecordedBySite.get(site.id);
+          const val = (src && src.get(rentree - 1)) || 0;
+          hireByRentreeBySite.get(site.name).set(rentree, val);
+        }
+      }
+
+      // adoption (sur total)
+      const adoption = new Map();
+      hireByRentree.forEach((v, rentree) => adoption.set(rentree - 4, v * adoptionK));
+
+      return { hireByRentree, hireByRentreeBySite, adoption };
+    }
+
+    // ---------------------- Cap PAR MÉTIER ----------------------
+    // Limite chaque métier à `cap` embauches/an, avec report sur l'année suivante (pour CE métier).
+    // Répartit le cap entre les villes proportionnellement au besoin initial de l'année.
+    function capOneMetierStream(metier, sim, N, H, adoptionK, cap) {
+      if (!isFinite(cap) || cap < 0) cap = Infinity;
+
+      const years = Array.from({ length: H }, (_, i) => N + 1 + i);
+      const inTotal = sim.hireByRentree;                // Map rentrées -> total
+      const inBySite = sim.hireByRentreeBySite;         // Map siteName -> Map rentrées -> val
+
+      // Cumul de report uniquement pour ce métier
+      let carry = 0;
+      const outTotal = new Map();
+      const outBySite = new Map(); // siteName -> Map rentrées -> val
+      for (const [siteName] of inBySite) outBySite.set(siteName, new Map());
+
+      for (const y of years) {
+        // besoin initial par site pour l'année y
+        const siteNeeds = [];
+        let baseTotal = 0;
+        for (const [siteName, serie] of inBySite) {
+          const need = serie.get(y) || 0;
+          siteNeeds.push({ siteName, need });
+          baseTotal += need;
+        }
+
+        // on ajoute le carry au total; on répartit le carry proportionnellement aux besoins par site
+        let totalNeed = baseTotal + carry;
+
+        // cas simple: cap infini
+        let allocTotal = Math.min(totalNeed, cap);
+        outTotal.set(y, allocTotal);
+        let remainder = Math.max(0, totalNeed - allocTotal);
+
+        // Répartition par site selon la part de base; si base=0 mais carry>0, on répartit à parts égales
+        const siteShares = [];
+        if (baseTotal > 0) {
+          for (const s of siteNeeds) {
+            const share = s.need / baseTotal;
+            siteShares.push({ siteName: s.siteName, share });
+          }
+        } else if (carry > 0 && siteNeeds.length > 0) {
+          const eq = 1 / siteNeeds.length;
+          for (const s of siteNeeds) siteShares.push({ siteName: s.siteName, share: eq });
+        } else {
+          for (const s of siteNeeds) siteShares.push({ siteName: s.siteName, share: 0 });
+        }
+
+        // Allocation par site = arrondi au plus proche après base proportionnelle
+        const provisional = siteShares.map(s => {
+          const raw = allocTotal * s.share;
+          const base = Math.floor(raw);
+          return { siteName: s.siteName, base, frac: raw - base };
+        });
+        let used = provisional.reduce((a, p) => a + p.base, 0);
+        let remaining = allocTotal - used;
+        provisional.sort((a, b) => (b.frac - a.frac));
+        let i = 0;
+        while (remaining > 0 && provisional.length > 0) {
+          const p = provisional[i % provisional.length];
+          p.base += 1; used += 1; remaining -= 1; i++;
+        }
+
+        // Enregistre
+        for (const p of provisional) {
+          outBySite.get(p.siteName).set(y, p.base);
+        }
+
+        // calcule le report pour l'année suivante
+        carry = remainder;
+      }
+
+      // Adoption recalculée sur total capé
+      const adoption = new Map();
+      outTotal.forEach((v, rentree) => adoption.set(rentree - 4, v * adoptionK));
+
+      return {
+        hireByRentree: outTotal,
+        hireByRentreeBySite: outBySite,
+        adoption
+      };
+    }
+
+    function aggregateTotals(simulations) {
+      const totals = { hires: new Map(), adoption: new Map() };
+      for (const s of simulations) {
+        s.hireByRentree.forEach((v, y) => totals.hires.set(y, (totals.hires.get(y) || 0) + v));
+        s.adoption.forEach((v, y) => totals.adoption.set(y, (totals.adoption.get(y) || 0) + v));
+      }
+      return totals;
+    }
+
+    // ---------------------- Rendu Table (récap total) ----------------------
+    function renderRecapTable(root, sims, totals) {
+      const years = Array.from({ length: state.H }, (_, i) => state.N + 1 + i);
+      const thead = h("thead", {},
+        h("tr", { class: "text-left border-b border-slate-200/60" },
+          h("th", { class: "py-2 pr-4" }, "Année"),
+          ...state.metiers.map(m => h("th", { class: "py-2 pr-4" }, m.name)),
+          h("th", { class: "py-2 pr-4" }, "Total"),
+          h("th", { class: "py-2" }, "Adoption (N-4)"),
+        )
+      );
+
+      const rows = years.map(y => {
+        const total = sims.reduce((acc, s) => acc + (s.hireByRentree.get(y) || 0), 0);
+        const adoptionVal = totals.adoption.get(y - 4) || 0;
+        return h("tr", { class: "border-b border-slate-100/60 hover:bg-slate-50/50" },
+          h("td", { class: "py-2 pr-4 font-medium" }, y),
+          ...sims.map(s => h("td", { class: "py-2 pr-4 tabular-nums" }, s.hireByRentree.get(y) || 0)),
+          h("td", { class: "py-2 pr-4 font-semibold tabular-nums" }, total),
+          h("td", { class: "py-2 tabular-nums" }, adoptionVal),
+        );
+      });
+
+      const tbody = h("tbody", {}, ...rows);
+      root.innerHTML = ""; root.appendChild(thead); root.appendChild(tbody);
+    }
+
+    // ---------------------- Rendu Métiers (édition + aperçu) ----------------------
+    function renderMetiersGrid(root, sims) {
+      root.innerHTML = "";
+      for (const m of state.metiers) {
+        const previewYears = Array.from({ length: state.H }, (_, i) => state.N + 1 + i);
+        const sim = sims.find(s => s._id === m.id);
+        const bars = previewYears.map(y => sim.hireByRentree.get(y) || 0);
+        const max = Math.max(1, ...bars);
+
+        const siteBlocks = m.sites.map(s => {
+          const addBtn = h("button", { class: "btn", onClick: () => {
+            s.trainers.push({ id: s.id + "-t-" + Date.now(), name: "", years: 0, permanent: false });
+            renderAll();
+          }}, "+ Ajouter un formateur");
+
+          const trainers = s.trainers.length ? s.trainers.map(t => {
+            const name = h("input", {
+              class: "input", placeholder: "Nom", value: t.name || "",
+              oninput: (e) => { t.name = e.target.value; }
+            });
+            const years = h("input", {
+              class: "input", type: "number", min: "0", value: t.years || 0,
+              oninput: (e) => { t.years = Math.max(0, parseInt(e.target.value || "0", 10)); renderAll(); }
+            });
+            const checkboxId = `${s.id}-${t.id}-perm`;
+            const perm = h("input", {
+              id: checkboxId,
+              type: "checkbox",
+              checked: !!t.permanent,
+              class: "accent-slate-900",
+              onclick: (e) => { t.permanent = e.target.checked; renderAll(); },
+              onchange: (e) => { t.permanent = e.target.checked; renderAll(); }
+            });
+
+            return h("div", { class: "trainer-row" },
+              h("div", { class: "name"  }, name),
+              h("div", { class: "years" }, years),
+              h("label", { class: "perm inline-flex items-center gap-2 cursor-pointer", for: checkboxId },
+                perm,
+                h("span", { class: "text-sm" }, "Permanent")
+              )
+            );
+          }) : [ h("div", { class: "text-xs italic opacity-60" }, "Aucun formateur – ajoutez des lignes.") ];
+
+          return h("div", { class: "rounded-xl border border-slate-200/60 p-3" },
+            h("div", { class: "flex items-center justify-between" },
+              h("div", { class: "font-medium" }, s.name),
+              addBtn
+            ),
+            h("div", { class: "mt-2 grid grid-cols-1 gap-2" }, ...trainers)
+          );
+        });
+
+        const addSiteBtn = h("button", { class: "btn", onClick: () => {
+          m.sites.push({ id: m.id + "-site-" + Date.now(), name: "Nouveau site", trainers: [] });
+          renderAll();
+        }}, "+ Ajouter un site");
+
+        const barPreview = h("div", { class: "flex items-end gap-1 h-8" },
+          ...bars.map((v) => h("div", {
+            class: "w-1.5 rounded bg-slate-900/70",
+            style: "height:" + (100 * v / max) + "%;"
+          }))
+        );
+
+        const card = h("div", { class: "card" },
+          h("div", { class: "flex items-start justify-between gap-3" },
+            h("div", {},
+              h("h3", { class: "text-lg font-semibold" }, m.name),
+              h("p", { class: "text-xs opacity-70" }, "Durée mission: " + (m.tenure || state.tenureDefault) + " ans")
+            ),
+            barPreview
+          ),
+          h("div", { class: "mt-4 space-y-4" }, ...siteBlocks, h("div", { class: "flex gap-2" }, addSiteBtn))
+        );
+
+        root.appendChild(card);
+      }
+    }
+
+    // ---------------------- Rendu Besoin par ville & année ----------------------
+    function renderCityYear(host, sims) {
+      host.innerHTML = "";
+      const years = Array.from({ length: state.H }, (_, i) => state.N + 1 + i);
+
+      for (const m of state.metiers) {
+        const sim = sims.find(s => s._id === m.id);
+        const siteNames = m.sites.map(s => s.name);
+
+        const tbl = document.createElement("table");
+        tbl.className = "w-full text-sm min-w-[640px]";
+        const thead = document.createElement("thead");
+        const trh = document.createElement("tr");
+        trh.className = "text-left border-b border-slate-200/60";
+        trh.appendChild(h("th", { class: "py-2 pr-4" }, "Année"));
+        for (const sn of siteNames) trh.appendChild(h("th", { class: "py-2 pr-4" }, sn));
+        thead.appendChild(trh);
+
+        const tbody = document.createElement("tbody");
+        for (const y of years) {
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100/60 hover:bg-slate-50/50";
+          tr.appendChild(h("td", { class: "py-2 pr-4 font-medium" }, y));
+          for (const sn of siteNames) {
+            const v = (sim.hireByRentreeBySite.get(sn)?.get(y)) || 0;
+            tr.appendChild(h("td", { class: "py-2 pr-4 tabular-nums" }, v));
+          }
+          tbody.appendChild(tr);
+        }
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.appendChild(h("h3", { class: "text-lg font-semibold mb-2" }, `Métier : ${m.name}`));
+        tbl.appendChild(thead); tbl.appendChild(tbody);
+        card.appendChild(tbl);
+        host.appendChild(card);
+      }
+    }
+
+    // ---------------------- Graphique ----------------------
+    function renderChart(host, totals) {
+      const N = state.N, H = state.H;
+      const padding = { top: 24, right: 16, bottom: 32, left: 40 };
+      const w = 980, h = 300;
+      const minYear = N - 4, maxYear = N + H;
+      const years = []; for (let y = minYear; y <= maxYear; y++) years.push(y);
+
+      const hiresMap = totals.hires, adoptionMap = totals.adoption;
+      const maxVal = Math.max(
+        1,
+        ...years.map(y => hiresMap.get(y) || 0),
+        ...years.map(y => adoptionMap.get(y) || 0)
+      );
+
+      const x = (y) => {
+        const t = (y - minYear) / (maxYear - minYear);
+        return padding.left + t * (w - padding.left - padding.right);
+      };
+      const yScale = (v) => padding.top + (1 - v / maxVal) * (h - padding.top - padding.bottom);
+      const barWidth = Math.max(6, (w - padding.left - padding.right) / years.length - 6);
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      svg.setAttribute("class", "w-full h-auto text-slate-900");
+
+      // Grille + labels
+      [0, 0.25, 0.5, 0.75, 1].forEach((g) => {
+        const yLine = padding.top + g * (h - padding.top - padding.bottom);
+        const line = document.createElementNS(svgNS, "line");
+        line.setAttribute("x1", padding.left); line.setAttribute("x2", w - padding.right);
+        line.setAttribute("y1", yLine); line.setAttribute("y2", yLine);
+        line.setAttribute("stroke", "currentColor"); line.setAttribute("opacity", "0.08");
+        svg.appendChild(line);
+
+        const val = Math.round((1 - g) * maxVal);
+        const label = document.createElementNS(svgNS, "text");
+        label.setAttribute("x", 8); label.setAttribute("y", yLine + 4);
+        label.setAttribute("class", "text-[10px] opacity-60");
+        label.textContent = val; svg.appendChild(label);
+      });
+
+      // Barres (rentrées N+1..N+H)
+      years.forEach(yr => {
+        if (yr < N + 1) return;
+        const v = hiresMap.get(yr) || 0;
+        const bx = x(yr) - barWidth / 2;
+        const by = yScale(v);
+        const bh = h - padding.bottom - by;
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", bx); rect.setAttribute("y", by);
+        rect.setAttribute("width", barWidth); rect.setAttribute("height", bh);
+        rect.setAttribute("fill", "currentColor"); rect.setAttribute("opacity", "0.85");
+        rect.setAttribute("rx", "6");
+        svg.appendChild(rect);
+      });
+
+      // Courbe Adoption
+      const pathPts = years.map((y, i) => `${i ? "L" : "M"}${x(y)},${yScale(adoptionMap.get(y) || 0)}`).join(" ");
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", pathPts);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-opacity", "0.5");
+      path.setAttribute("stroke-width", "2");
+      svg.appendChild(path);
+
+      // Points
+      years.forEach(y => {
+        const c = document.createElementNS(svgNS, "circle");
+        c.setAttribute("cx", x(y)); c.setAttribute("cy", yScale(adoptionMap.get(y) || 0));
+        c.setAttribute("r", 2.5); c.setAttribute("fill", "currentColor"); c.setAttribute("opacity", "0.65");
+        svg.appendChild(c);
+      });
+
+      // X labels
+      years.forEach(y => {
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", x(y)); text.setAttribute("y", h - 8);
+        text.setAttribute("text-anchor", "middle"); text.setAttribute("class", "text-[10px] opacity-70");
+        text.textContent = y; svg.appendChild(text);
+      });
+
+      // Légende
+      const g = document.createElementNS(svgNS, "g");
+      g.setAttribute("transform", `translate(${w - 190},12)`);
+      const legendBg = document.createElementNS(svgNS, "rect");
+      legendBg.setAttribute("x", 0); legendBg.setAttribute("y", -8);
+      legendBg.setAttribute("width", 180); legendBg.setAttribute("height", 22);
+      legendBg.setAttribute("rx", 10); legendBg.setAttribute("fill", "white");
+      g.appendChild(legendBg);
+
+      const barLegend = document.createElementNS(svgNS, "rect");
+      barLegend.setAttribute("x", 10); barLegend.setAttribute("y", 0);
+      barLegend.setAttribute("width", 14); barLegend.setAttribute("height", 10);
+      barLegend.setAttribute("rx", 2); barLegend.setAttribute("fill", "currentColor"); barLegend.setAttribute("opacity", "0.85");
+      g.appendChild(barLegend);
+      const barTxt = document.createElementNS(svgNS, "text");
+      barTxt.setAttribute("x", 30); barTxt.setAttribute("y", 9); barTxt.setAttribute("class", "text-[11px]");
+      barTxt.textContent = "Total formateurs (rentrées)"; g.appendChild(barTxt);
+
+      const dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", 126); dot.setAttribute("cy", 5); dot.setAttribute("r", 3);
+      dot.setAttribute("fill", "currentColor"); dot.setAttribute("opacity", "0.6");
+      g.appendChild(dot);
+      const adTxt = document.createElementNS(svgNS, "text");
+      adTxt.setAttribute("x", 136); adTxt.setAttribute("y", 9); adTxt.setAttribute("class", "text-[11px]");
+      adTxt.textContent = "Adoption (N-4)"; g.appendChild(adTxt);
+
+      host.innerHTML = ""; host.appendChild(svg);
+    }
+
+    // ---------------------- Export CSV ----------------------
+    function exportCSV(sims, totals) {
+      const years = Array.from({ length: state.H }, (_, i) => state.N + 1 + i);
+      const header = ["Année", ...state.metiers.map(m => m.name), "Total", "Adoption (N-4)"];
+      const rows = [header];
+      for (const y of years) {
+        const line = [y]; let rowTotal = 0;
+        for (const s of sims) { const v = s.hireByRentree.get(y) || 0; line.push(v); rowTotal += v; }
+        const adoptionVal = totals.adoption.get(y - 4) || 0;
+        rows.push([...line, rowTotal, adoptionVal]);
+      }
+      downloadCSV(`Planning_formateurs_${state.N + 1}-${state.N + state.H}.csv`, rows);
+    }
+
+    // ---------------------- Rendu global ----------------------
+    function renderAll() {
+      document.getElementById("subtitle").innerHTML =
+        `Récap dès <b>N+1</b> (${state.N + 1}) · Adoption <b>N-4</b> (×${state.adoptionK}) · Cap par métier : <b>${state.capPerYearPerMetier}/an</b>`;
+      document.getElementById("pillN").textContent = "Année N: " + state.N;
+      document.getElementById("pillH").textContent = "Horizon: " + state.H + " ans";
+      document.getElementById("spanH").textContent = state.H;
+      document.getElementById("chartLegend").textContent =
+        `Barres = total des embauches par rentrée (N+1 → N+${state.H}) (cap par métier appliqué). `
+        + `Courbe = Adoption (×${state.adoptionK}) affichée 4 ans plus tôt (N-4).`;
+
+      // 1) Simulations brutes (avec détail par site)
+      const base = state.metiers.map(m => ({
+        _id: m.id,
+        _metier: m,
+        ...simulateMetier(m, state.N, state.H, state.adoptionK)
+      }));
+
+      // 2) Appliquer le CAP PAR MÉTIER
+      const capped = base.map(b => ({
+        _id: b._id,
+        ...capOneMetierStream(b._metier, b, state.N, state.H, state.adoptionK, state.capPerYearPerMetier)
+      }));
+
+      // 3) Totaux
+      const totals = aggregateTotals(capped);
+
+      // 4) UI
+      renderRecapTable(document.getElementById("recapTable"), capped, totals);
+      renderMetiersGrid(document.getElementById("metiersGrid"), capped);
+      renderCityYear(document.getElementById("cityYearHost"), capped);
+      renderChart(document.getElementById("chartHost"), totals);
+    }
+
+    // ---------------------- Init + événements ----------------------
+    const inpN = document.getElementById("inpN");
+    const inpH = document.getElementById("inpH");
+    const inpTenure = document.getElementById("inpTenure");
+    const inpAdoptK = document.getElementById("inpAdoptK");
+    const inpCap = document.getElementById("inpCap");
+    const btnExport = document.getElementById("btnExport");
+    const btnAddMetier = document.getElementById("btnAddMetier");
+
+    inpN.value = state.N;
+    inpH.value = state.H;
+    inpTenure.value = state.tenureDefault;
+    inpAdoptK.value = state.adoptionK;
+    inpCap.value = state.capPerYearPerMetier;
+
+    inpN.addEventListener("input", e => { state.N = parseInt(e.target.value || THIS_YEAR, 10); renderAll(); });
+    inpH.addEventListener("input", e => { state.H = Math.max(1, parseInt(e.target.value || "10", 10)); renderAll(); });
+    inpTenure.addEventListener("input", e => {
+      const v = Math.max(1, parseInt(e.target.value || "3", 10));
+      state.tenureDefault = v;
+      state.metiers.forEach(m => { m.tenure = v; });
+      renderAll();
+    });
+    inpAdoptK.addEventListener("input", e => { state.adoptionK = Math.max(1, parseInt(e.target.value || "4", 10)); renderAll(); });
+    inpCap.addEventListener("input", e => {
+      const v = parseInt(e.target.value || "4", 10);
+      state.capPerYearPerMetier = isFinite(v) && v >= 0 ? v : 4;
+      renderAll();
+    });
+
+    btnExport.addEventListener("click", () => {
+      const base = state.metiers.map(m => ({
+        _id: m.id,
+        _metier: m,
+        ...simulateMetier(m, state.N, state.H, state.adoptionK)
+      }));
+      const capped = base.map(b => ({
+        _id: b._id,
+        ...capOneMetierStream(b._metier, b, state.N, state.H, state.adoptionK, state.capPerYearPerMetier)
+      }));
+      const totals = aggregateTotals(capped);
+      exportCSV(capped, totals);
+    });
+
+    btnAddMetier.addEventListener("click", () => {
+      state.metiers.push({
+        id: "metier-" + Date.now(),
+        name: "Nouveau métier",
+        tenure: state.tenureDefault,
+        sites: [{ id: "site-" + Date.now(), name: "Site", trainers: [] }]
+      });
+      renderAll();
+    });
+
+    renderAll();
+  </script>
+  <footer>
+  <p>© 2025 Nicolas DEFORGES. Tous droits réservés.</p>
+</footer>
+</body>
+</html>
